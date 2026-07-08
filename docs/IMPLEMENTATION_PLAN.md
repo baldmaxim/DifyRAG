@@ -6,12 +6,15 @@
 | Этап | Промт | Результат | Статус |
 |---|---|---|---|
 | 1 | `01_architecture_and_monorepo` | Docs + pnpm-monorepo (`apps/api`, `apps/web`, `packages/shared`), env, toolchain | ✅ выполнено |
-| 2 | `02_infra_...` | `infra/{dify,qdrant,lmstudio,platform}` + deployment docs | ⏳ |
-| 3 | `03_backend_core_...` | Prisma schema, auth (JWT+argon2), API keys, S3 StorageService, CRUD, seed | ⏳ |
-| 4 | `04_dify_ingestion_...` | Dify/LM Studio/Qdrant integrations, processing worker, mappings, poller | ⏳ |
-| 5 | `05_search_external_api_...` | `/search`, external API, RBAC, rate limit | ⏳ |
-| 6 | `06_frontend_antd_...` | Полный UI на Ant Design 5 | ⏳ |
-| 7 | `07_tests_security_deploy_...` | Hardening, тесты, Docker, CI, final review | ⏳ |
+| 2 | `02_infra_...` | `infra/{dify,qdrant,lmstudio,platform}` + deployment docs | ✅ выполнено |
+| 3 | `03_backend_core_...` | Prisma schema, auth (JWT+argon2), API keys, S3 StorageService, CRUD, seed | ✅ выполнено |
+| 4 | `04_dify_ingestion_...` | Dify/LM Studio/Qdrant integrations, processing worker, mappings, poller | ✅ выполнено |
+| 5 | `05_search_external_api_...` | `/search`, external API, RBAC, rate limit | ✅ выполнено |
+| 6 | `06_frontend_antd_...` | Полный UI на Ant Design 5 | ✅ выполнено |
+| 7 | `07_tests_security_deploy_...` | Hardening, тесты, Docker, CI, final review | ✅ выполнено |
+
+Все проверки (`install / lint / typecheck / test / build`) зелёные; 68 тестов. Runtime-валидация
+RAG-связки (Dify + LM Studio + Qwen3-Embedding-8B + Qdrant) — на GPU-ПК (фаза 2), затем сервер (фаза 3).
 
 ## Фазы окружения (локально → сервер)
 
