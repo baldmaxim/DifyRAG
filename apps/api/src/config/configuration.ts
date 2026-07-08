@@ -148,7 +148,10 @@ export const configuration = (): RootConfig => ({
   lmStudio: {
     baseUrl: process.env.LM_STUDIO_BASE_URL ?? 'http://host.docker.internal:1234/v1',
     embeddingModel: process.env.LM_STUDIO_EMBEDDING_MODEL ?? 'qwen3-embedding-8b',
-    expectedEmbeddingDimension: toInt(process.env.LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION, 4096),
+    // 0 = dimension not enforced (health reports detected dim without a "degraded"
+    // verdict). Set to the real dim of the loaded model: 4096 for Qwen3-Embedding-8B
+    // on the server, or the smaller local model's dim (e.g. 384/768/1024) for local tests.
+    expectedEmbeddingDimension: toInt(process.env.LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION, 0),
     timeoutMs: toInt(process.env.LM_STUDIO_TIMEOUT_MS, 60_000),
   },
   qdrant: {

@@ -25,13 +25,17 @@ curl -H "api-key: $QDRANT_API_KEY" http://localhost:6333/collections
 curl -H "api-key: $QDRANT_API_KEY" http://localhost:6333/collections/<name>
 ```
 
-The vector size in the collection config should be **4096** (Qwen3-Embedding-8B).
+The vector size in the collection config must equal the active model's dimension —
+**4096** for `Qwen3-Embedding-8B` on the server, or your smaller local model's dim
+(e.g. 384/768/1024) during local testing.
 
 ## Common issues
 
 - **No collection after indexing:** the document is probably still `parsing`/`indexing`, or the
   embedding provider failed — check Dify worker logs and LM Studio.
-- **Wrong vector size:** the Dify KB was created with a different embedding model; recreate it
-  with the LM Studio 4096-dim model.
+- **Wrong vector size:** the Dify KB was created with a different embedding model; recreate the KB
+  with the model for the current environment. A collection created at one dimension can NOT be
+  reused with a different-dimension model — this is why local(small-dim)→server(4096) migration
+  needs a **fresh** Qdrant + fresh Dify datasets (see DEPLOYMENT.md §7).
 - **Connection refused:** check `QDRANT_URL`/`QDRANT_API_KEY` in Dify and that Dify shares the
   network with Qdrant.

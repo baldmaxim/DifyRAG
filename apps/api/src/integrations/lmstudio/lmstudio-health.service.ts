@@ -24,7 +24,10 @@ export class LmStudioHealthService {
       const models = await this.client.listModels();
       const dimension = await this.client.detectEmbeddingDimension();
       const expected = this.cfg.expectedEmbeddingDimension;
-      const degraded = dimension !== expected;
+      // Only flag degraded when an expected dimension is configured (> 0) and it
+      // mismatches — so any embedding model (small local or Qwen3-8B) reads as ok
+      // when LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION is set to its real value (or 0).
+      const degraded = expected > 0 && dimension !== expected;
       return {
         provider: 'lmstudio',
         status: degraded ? 'degraded' : 'ok',
@@ -34,6 +37,7 @@ export class LmStudioHealthService {
           embeddingModel: this.cfg.embeddingModel,
           expectedDimension: expected,
           detectedDimension: dimension,
+          dimensionEnforced: expected > 0,
           models,
         },
       };

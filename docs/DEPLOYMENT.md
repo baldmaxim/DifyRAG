@@ -25,6 +25,8 @@ Production assumptions:
 
 - Bring up **Qdrant** (`infra/qdrant/docker-compose.qdrant.yml`).
 - Bring up **LM Studio** with `Qwen3-Embedding-8B` (dim 4096) — see `infra/lmstudio`.
+  (Local testing may load a smaller installed model — set `LM_STUDIO_EMBEDDING_MODEL` /
+  `LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION` to its actual values; see `.env.example`.)
 - Bring up **Dify** with `VECTOR_STORE=qdrant` — see [DIFY_SETUP.md](DIFY_SETUP.md).
 - Add LM Studio as a Dify model provider — see [LM_STUDIO_DIFY_PROVIDER_SETUP.md](LM_STUDIO_DIFY_PROVIDER_SETUP.md).
 - Create a Dify **Knowledge API key** → `DIFY_KNOWLEDGE_API_KEY`. (Optional Dify **App API key**
@@ -61,8 +63,16 @@ pnpm --filter @dkp/api seed   # creates super admin (SEED_ADMIN_*), doc types, d
 
 ## 7. Migrations local → server
 
-Only `.env` changes: `DATABASE_URL`, `DIFY_BASE_URL`, `QDRANT_URL`, `LM_STUDIO_BASE_URL`,
-public URLs, `CORS_ORIGIN`. Re-run the verify checklist on the server.
+`.env` changes: `DATABASE_URL`, `DIFY_BASE_URL`, `QDRANT_URL`, `LM_STUDIO_BASE_URL`,
+`LM_STUDIO_EMBEDDING_MODEL`, `LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION` (→ `qwen3-embedding-8b` /
+`4096` on the server), public URLs, `CORS_ORIGIN`. Re-run the verify checklist on the server.
+
+**Important — do not share data stores across environments.** Local testing may use a smaller
+embedding model, so its Qdrant collections and `dify_dataset_mappings` are built at a different
+vector size. Use a **fresh** PostgreSQL, **fresh** Qdrant, and **fresh** Dify datasets on the
+server (the app auto-creates them at 4096 on first upload; `ensureDataset` self-heals a stale
+dataset id via a 404 check). See the "Local → remote migration" section of
+[END_TO_END_RAG_DEPLOYMENT.md](END_TO_END_RAG_DEPLOYMENT.md).
 
 ## 8. Backups
 

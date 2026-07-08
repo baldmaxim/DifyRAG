@@ -1,7 +1,9 @@
 # LM Studio (OpenAI-compatible embedding/LLM provider)
 
-LM Studio serves `Qwen/Qwen3-Embedding-8B` (dimension **4096**) over an OpenAI-compatible API.
-Dify connects to it as an OpenAI-compatible model provider. The portal only uses LM Studio for
+LM Studio serves an OpenAI-compatible embedding model. **Server (production):**
+`Qwen/Qwen3-Embedding-8B` (dim **4096**). **Local testing:** load a smaller installed model
+(e.g. 384/768/1024 dim) — set `LM_STUDIO_EMBEDDING_MODEL` and `LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION`
+to whichever is loaded. Dify connects to it as a model provider; the portal uses LM Studio only for
 health/diagnostics — it never generates document embeddings itself.
 
 ## 1. Start the LM Studio Server
@@ -17,7 +19,8 @@ health/diagnostics — it never generates document embeddings itself.
 
 ## 2. Load the embedding model
 
-Download `Qwen/Qwen3-Embedding-8B` (or a GGUF variant) in LM Studio and load it.
+Download `Qwen/Qwen3-Embedding-8B` (or a GGUF variant) in LM Studio and load it. **For local
+testing, load your smaller installed embedding model instead.**
 
 Quantization guidance:
 
@@ -30,7 +33,8 @@ Quantization guidance:
 # list loaded models
 curl http://localhost:1234/v1/models
 
-# test an embedding — check the returned vector length == 4096
+# test an embedding — the returned vector length is the model's dimension
+# (4096 for Qwen3-8B; smaller for a local model). Use the exact id from /v1/models.
 curl http://localhost:1234/v1/embeddings \
   -H "Content-Type: application/json" \
   -d '{"model":"qwen3-embedding-8b","input":"health check"}'

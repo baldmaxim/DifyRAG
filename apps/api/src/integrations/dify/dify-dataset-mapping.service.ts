@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { DifyDatasetMapping, Scope } from '@prisma/client';
-import type { DifyConfig } from '../../config/configuration';
+import type { DifyConfig, LmStudioConfig } from '../../config/configuration';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { DifyClient } from './dify.client';
+import { DifyApiError, DifyClient } from './dify.client';
 import {
   companyDatasetName,
   projectDatasetName,
@@ -31,6 +31,9 @@ export class DatasetSetupRequiredError extends Error {
 export class DifyDatasetMappingService {
   private readonly logger = new Logger(DifyDatasetMappingService.name);
   private readonly cfg: DifyConfig;
+  private readonly lmStudioModel: string;
+  /** Dataset ids confirmed to exist this process run — avoids re-verifying every sync. */
+  private readonly verifiedDatasetIds = new Set<string>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -38,6 +41,7 @@ export class DifyDatasetMappingService {
     config: ConfigService,
   ) {
     this.cfg = config.getOrThrow<DifyConfig>('dify');
+    this.lmStudioModel = config.getOrThrow<LmStudioConfig>('lmStudio').embeddingModel;
   }
 
   private datasetNameFor(input: ResolveMappingInput, group: DifyFolderGroup): string {
@@ -79,34 +83,80 @@ export class DifyDatasetMappingService {
     });
   }
 
-  /** Ensure the Dify dataset exists, creating it if auto-create is enabled. */
+  /**
+   * Ensure the Dify dataset exists, creating it if auto-create is enabled.
+   * Self-healing: if a stored `difyDatasetId` no longer exists in the current Dify
+   * (e.g. a mapping carried over from another environment / a different embedding
+   * dimension), it is cleared and recreated so vectors are (re)built for THIS Dify.
+   */
   async ensureDataset(mapping: DifyDatasetMapping): Promise<DifyDatasetMapping> {
-    if (mapping.difyDatasetId) {
-      return mapping;
+    let current = mapping;
+
+    if (current.difyDatasetId) {
+      if (await this.datasetExists(current.difyDatasetId)) {
+        return current;
+      }
+      this.logger.warn(
+        `Dify dataset ${current.difyDatasetId} (${current.difyDatasetName}) not found — recreating`,
+      );
+      current = await this.prisma.difyDatasetMapping.update({
+        where: { id: current.id },
+        data: { difyDatasetId: null, status: 'pending' },
+      });
     }
+
     if (!this.cfg.autoCreateDatasets) {
       await this.prisma.difyDatasetMapping.update({
-        where: { id: mapping.id },
+        where: { id: current.id },
         data: { status: 'error', errorMessage: 'setup_required' },
       });
-      throw new DatasetSetupRequiredError(mapping.difyDatasetName);
+      throw new DatasetSetupRequiredError(current.difyDatasetName);
     }
 
     await this.prisma.difyDatasetMapping.update({
-      where: { id: mapping.id },
+      where: { id: current.id },
       data: { status: 'creating' },
     });
     const dataset = await this.dify.createDataset({
-      name: mapping.difyDatasetName,
-      description: mapping.difyDatasetDescription ?? undefined,
-      indexing_technique: (mapping.indexingTechnique as 'high_quality' | 'economy') ?? 'high_quality',
+      name: current.difyDatasetName,
+      description: current.difyDatasetDescription ?? undefined,
+      indexing_technique: (current.indexingTechnique as 'high_quality' | 'economy') ?? 'high_quality',
       permission: 'only_me',
     });
+    this.verifiedDatasetIds.add(dataset.id);
     this.logger.log(`Created Dify dataset ${dataset.name} (${dataset.id})`);
 
     return this.prisma.difyDatasetMapping.update({
-      where: { id: mapping.id },
-      data: { difyDatasetId: dataset.id, status: 'active', errorMessage: null },
+      where: { id: current.id },
+      data: {
+        difyDatasetId: dataset.id,
+        status: 'active',
+        errorMessage: null,
+        // Record which embedding provider/model built this dataset — helps diagnose
+        // a local(small-dim) vs server(4096) mismatch if a mapping is reused.
+        embeddingProvider: 'lmstudio',
+        embeddingModel: this.lmStudioModel,
+      },
     });
+  }
+
+  /** Whether a Dify dataset id still exists in the current Dify (cached per run). */
+  private async datasetExists(datasetId: string): Promise<boolean> {
+    if (this.verifiedDatasetIds.has(datasetId)) {
+      return true;
+    }
+    try {
+      await this.dify.getDataset(datasetId);
+      this.verifiedDatasetIds.add(datasetId);
+      return true;
+    } catch (err) {
+      if (err instanceof DifyApiError && err.status === 404) {
+        return false;
+      }
+      // Transient/other error: assume it exists (do not recreate) but do not cache,
+      // so the next sync re-verifies.
+      this.logger.warn(`Could not verify Dify dataset ${datasetId}: ${(err as Error).message}`);
+      return true;
+    }
   }
 }

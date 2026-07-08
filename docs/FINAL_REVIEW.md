@@ -70,7 +70,11 @@ Upload a document, wait for `indexed`, confirm a Qdrant collection exists, run `
 
 ## 12. Current limitations
 
-- Runtime (Dify + LM Studio + Qwen3-Embedding-8B) validated on a GPU host, not the authoring VM.
+- Runtime validated on a local machine, then a GPU server. Local testing may use a **smaller
+  preinstalled embedding model** (set `LM_STUDIO_EMBEDDING_MODEL` + `LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION`
+  to its values, or dim `0`); the server uses `Qwen3-Embedding-8B` (4096). Data stores are **not**
+  shared across environments (Qdrant collection dimension is fixed) — use fresh PostgreSQL/Qdrant/Dify
+  datasets per environment; `ensureDataset` self-heals stale dataset ids via a 404 check.
 - Live DB migrate/seed run on the target host (offline initial migration is committed).
 - Dify chunking uses `automatic` process rule; custom `DIFY_CHUNK_*` rules to be tuned on live Dify.
 - Rate limiting is in-memory (single instance); use Redis for multi-instance.

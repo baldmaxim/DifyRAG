@@ -4,13 +4,16 @@ import type { LmStudioConfig } from '../../config/configuration';
 import { LmStudioHealthService } from './lmstudio-health.service';
 import type { LmStudioClient } from './lmstudio.client';
 
-const cfg: LmStudioConfig = {
-  baseUrl: 'http://localhost:1234/v1',
-  embeddingModel: 'qwen3-embedding-8b',
-  expectedEmbeddingDimension: 4096,
-  timeoutMs: 5000,
-};
-const config = { getOrThrow: () => cfg } as unknown as ConfigService;
+function configWith(expectedEmbeddingDimension: number): ConfigService {
+  const cfg: LmStudioConfig = {
+    baseUrl: 'http://localhost:1234/v1',
+    embeddingModel: 'qwen3-embedding-8b',
+    expectedEmbeddingDimension,
+    timeoutMs: 5000,
+  };
+  return { getOrThrow: () => cfg } as unknown as ConfigService;
+}
+const config = configWith(4096);
 
 function clientWith(dimension: number, configured = true): LmStudioClient {
   return {
@@ -38,5 +41,14 @@ describe('LmStudioHealthService', () => {
     const service = new LmStudioHealthService(clientWith(4096, false), config);
     const result = await service.check();
     expect(result.status).toBe('setup_required');
+  });
+
+  it('does not flag degraded when the expected dimension is not enforced (0)', async () => {
+    // A smaller local model (e.g. 768) is fine when the expected dim is left at 0.
+    const service = new LmStudioHealthService(clientWith(768), configWith(0));
+    const result = await service.check();
+    expect(result.status).toBe('ok');
+    expect(result.details.dimensionEnforced).toBe(false);
+    expect(result.details.detectedDimension).toBe(768);
   });
 });
