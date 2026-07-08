@@ -44,18 +44,42 @@ pnpm --filter @dkp/api db:migrate && pnpm --filter @dkp/api seed && pnpm dev
 ```
 После этого работает весь портал, кроме живой индексации (она ждёт Dify).
 
-## Блокер: Docker/WSL2 на №1 не стартует (HCS `0x80070569`)
+## Блокер: WSL2/Docker на №1 мёртв (HCS `0x80070569`) — ремонт (есть админ)
 
-Dify поставляется только как docker compose, поэтому нужен рабочий контейнерный рантайм.
-На №1 Docker Desktop не стартует — первопричина в WSL2/Hyper-V (право «Log on as a service»
-для `NT VIRTUAL MACHINE\Virtual Machines`). **Podman/Rancher не помогут — у них та же WSL2-основа.**
+Причина `0x80070569`: у аккаунта `NT VIRTUAL MACHINE\Virtual Machines` (SID `S-1-5-83-0`) отобрано
+право **«Log on as a service»** (частый побочный эффект CIS/security-baseline). Из-за этого не
+стартуют ни WSL2, ни Hyper-V-VM → ни Docker Desktop, ни Docker-in-WSL, ни Podman. Чиним право +
+включаем фичи + обновляем WSL (всё под админом):
 
-Что нужно (admin/IT):
-1. `secpol.msc` → Local Policies → User Rights Assignment → **Log on as a service** → добавить
-   `NT VIRTUAL MACHINE\Virtual Machines`. Если управляется доменной GPO — просить IT добавить в политику.
-2. Включить Windows features: **Virtual Machine Platform** и **Windows Subsystem for Linux**
-   (`dism /online /enable-feature`), затем `wsl --update`, `wsl --status`.
-3. Рестарт служб `vmcompute`, `LxssManager` (или ребут), затем старт Docker Desktop.
+```powershell
+# 1) Вернуть право "Log on as a service" аккаунту Virtual Machines (SID S-1-5-83-0)
+secedit /export /cfg "$env:TEMP\sec.cfg"
+$c = Get-Content "$env:TEMP\sec.cfg"
+$c = $c -replace '^(SeServiceLogonRight = .*)$', '$1,*S-1-5-83-0'
+Set-Content "$env:TEMP\sec.cfg" $c
+secedit /configure /db "$env:TEMP\sec.sdb" /cfg "$env:TEMP\sec.cfg" /areas USER_RIGHTS
+#   (Альтернатива вручную: secpol.msc → Local Policies → User Rights Assignment →
+#    Log on as a service → добавить NT VIRTUAL MACHINE\Virtual Machines)
+
+# 2) Включить фичи виртуализации
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
+
+```powershell
+# 3) ПЕРЕЗАГРУЗКА, затем:
+wsl --update
+wsl --set-default-version 2
+wsl --install -d Ubuntu
+wsl --status ; wsl -l -v          # должно быть здорово, дистрибутив Version 2
+```
+
+Затем запустить Docker Desktop (WSL2 backend) и проверить `docker run hello-world`.
+Если Docker Desktop капризничает — поставить **Docker Engine прямо в Ubuntu-WSL** (`apt install docker.io docker-compose-plugin`) и запускать Dify оттуда.
+
+> **Если право «Log on as a service» откатывается** после ребута/`gpupdate` — оно навязано доменной
+> GPO; тогда даже с локальным админом нужно, чтобы IT добавил `NT VIRTUAL MACHINE\Virtual Machines`
+> в саму GPO. Проверить: `gpresult /r`.
 
 Пока не починили — всё, кроме Dify, на №1 работает (Postgres native + портал + LM Studio + Qdrant).
 
