@@ -1,0 +1,55 @@
+# Example deployment of the Document Knowledge Portal (our app only).
+#
+# Production assumptions:
+#   - PostgreSQL is an EXTERNAL Managed service (via DATABASE_URL) — no Postgres container here.
+#   - S3 is Cloud.ru Object Storage.
+#   - Dify, Qdrant, LM Studio run as a separate stack (see infra/dify, infra/qdrant, infra/lmstudio).
+#
+# The api/web Dockerfiles and nginx.conf referenced below are created in prompt 07.
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: dkp-api
+    restart: unless-stopped
+    env_file:
+      # copy from apps/api/.env.example and fill in; optional so this example validates as-is
+      - path: ./api.env
+        required: false
+    extra_hosts:
+      # Linux: allow the container to reach services on the host (e.g. LM Studio health).
+      - 'host.docker.internal:host-gateway'
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      # DATABASE_URL, S3_*, DIFY_*, LM_STUDIO_*, QDRANT_* come from api.env
+    ports:
+      - '3000:3000'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/api/v1/health || exit 1']
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    container_name: dkp-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '8080:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:80/ || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+# Notes:
+# - The web container (nginx) serves the built SPA and proxies /api to the api service.
+# - Point DIFY_BASE_URL / QDRANT_URL / LM_STUDIO_BASE_URL at the RAG stack's private addresses.
+# - Keep Qdrant and LM Studio off the public internet (firewall/VPN).

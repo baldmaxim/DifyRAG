@@ -1,0 +1,31 @@
+# Qdrant vector store — used as the vector backend for Dify.
+# SECURITY: do NOT expose Qdrant to the public internet without a firewall/VPN.
+# Bind it to a private network or localhost and let only Dify reach it.
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.12.4 # pin a version; avoid :latest in production
+    container_name: dkp-qdrant
+    restart: unless-stopped
+    ports:
+      # For local dev only. On a server, prefer binding to 127.0.0.1:
+      #   - "127.0.0.1:6333:6333"
+      - '6333:6333' # REST
+      - '6334:6334' # gRPC
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-change-me}
+      QDRANT__SERVICE__ENABLE_TLS: 'false'
+      QDRANT__SERVICE__GRPC_PORT: '6334'
+      QDRANT__LOG_LEVEL: INFO
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    healthcheck:
+      # Newer Qdrant images may not ship curl; if so use the TCP variant:
+      #   test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      test: ['CMD-SHELL', 'curl -sf http://localhost:6333/readyz || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  qdrant_storage:

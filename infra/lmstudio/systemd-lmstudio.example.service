@@ -1,0 +1,27 @@
+# Example systemd unit for running the LM Studio server headless on a GPU host.
+# Install as /etc/systemd/system/lmstudio.service, adjust User/paths, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now lmstudio
+#
+# NOTE: `lms` must be on PATH for the service user. After installing LM Studio,
+# run `lms bootstrap` once as that user so the CLI is available.
+
+[Unit]
+Description=LM Studio Server (OpenAI-compatible endpoint)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lmstudio
+Group=lmstudio
+Environment=HOME=/home/lmstudio
+# Bind to localhost only if Dify runs on the same host; use 0.0.0.0 + firewall otherwise.
+ExecStart=/usr/local/bin/lms server start --port 1234
+ExecStop=/usr/local/bin/lms server stop
+Restart=on-failure
+RestartSec=5
+# Give model loading enough time.
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

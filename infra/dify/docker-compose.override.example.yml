@@ -1,0 +1,36 @@
+# Example override for Dify's official docker-compose.
+#
+# Usage: place this file next to Dify's docker-compose.yaml as
+#   docker-compose.override.yaml
+# so Dify's api and worker containers can reach LM Studio running on the host
+# (host.docker.internal) and share the Qdrant network.
+#
+# Do NOT copy Dify sources into this repository — install Dify separately via its
+# official method (git clone langgenius/dify → docker/docker-compose).
+services:
+  api:
+    extra_hosts:
+      # Required on Linux so containers can resolve host.docker.internal → the host,
+      # where LM Studio listens on :1234.
+      - 'host.docker.internal:host-gateway'
+    environment:
+      VECTOR_STORE: qdrant
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-change-me}
+      QDRANT_GRPC_ENABLED: 'true'
+      QDRANT_GRPC_PORT: '6334'
+
+  worker:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      VECTOR_STORE: qdrant
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-change-me}
+
+# If Qdrant runs in a separate compose project, connect Dify to its network, e.g.:
+#
+# networks:
+#   default:
+#     name: dkp_qdrant_default
+#     external: true
