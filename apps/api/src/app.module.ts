@@ -18,6 +18,7 @@ import { FoldersModule } from './folders/folders.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { ProcessingModule } from './processing/processing.module';
 import { ProjectsModule } from './projects/projects.module';
+import { ReportingModule } from './reporting/reporting.module';
 import { SearchModule } from './search/search.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -41,6 +42,7 @@ import { StorageModule } from './storage/storage.module';
     ProcessingModule,
     SearchModule,
     ExternalModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [

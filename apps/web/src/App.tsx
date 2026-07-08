@@ -1,34 +1,41 @@
-import { CloudServerOutlined } from '@ant-design/icons';
-import { Card, Layout, Space, Typography } from 'antd';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { AppLayout } from './components/AppLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { ApiKeysPage } from './pages/ApiKeysPage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { DepartmentsPage } from './pages/DepartmentsPage';
+import { DifyDatasetsPage } from './pages/DifyDatasetsPage';
+import { DocumentsPage } from './pages/DocumentsPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
+import { LoginPage } from './pages/LoginPage';
+import { ProjectDetailPage } from './pages/ProjectDetailPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { ProcessingJobsPage } from './pages/ProcessingJobsPage';
+import { SearchPage } from './pages/SearchPage';
 
-const { Header, Content } = Layout;
-const { Title, Paragraph } = Typography;
-
-/**
- * Prompt 01 skeleton landing page. The full enterprise UI (login, dashboard,
- * projects, search, integrations, ...) is implemented in prompt 06.
- */
 function App(): React.ReactElement {
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ display: 'flex', alignItems: 'center' }}>
-        <Space>
-          <CloudServerOutlined style={{ color: '#fff', fontSize: 20 }} />
-          <span style={{ color: '#fff', fontSize: 18, fontWeight: 600 }}>
-            Document Knowledge Portal
-          </span>
-        </Space>
-      </Header>
-      <Content style={{ padding: 24, maxWidth: 880, margin: '0 auto', width: '100%' }}>
-        <Card>
-          <Title level={3}>Document Knowledge Portal</Title>
-          <Paragraph type="secondary">
-            Dify-first RAG portal for construction-company documents. This is the monorepo
-            scaffold (prompt 01); the full interface is built in prompt 06.
-          </Paragraph>
-        </Card>
-      </Content>
-    </Layout>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
+          <Route path="/dify-datasets" element={<DifyDatasetsPage />} />
+          <Route path="/integrations" element={<IntegrationsPage />} />
+          <Route path="/api-keys" element={<ApiKeysPage />} />
+          <Route path="/processing-jobs" element={<ProcessingJobsPage />} />
+          <Route path="/audit-logs" element={<AuditLogsPage />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
 
