@@ -71,6 +71,10 @@ export interface ProcessingConfig {
   maxAttempts: number;
 }
 
+export interface SecurityConfig {
+  externalRateLimitPerMin: number;
+}
+
 export interface RootConfig {
   app: AppConfig;
   database: DatabaseConfig;
@@ -81,6 +85,7 @@ export interface RootConfig {
   qdrant: QdrantConfig;
   queue: QueueConfig;
   processing: ProcessingConfig;
+  security: SecurityConfig;
 }
 
 const toBool = (value: string | undefined, fallback = false): boolean => {
@@ -158,5 +163,8 @@ export const configuration = (): RootConfig => ({
     workerEnabled: toBool(process.env.PROCESSING_WORKER_ENABLED, false),
     pollIntervalMs: toInt(process.env.PROCESSING_POLL_INTERVAL_MS, 4000),
     maxAttempts: toInt(process.env.PROCESSING_MAX_ATTEMPTS, 5),
+  },
+  security: {
+    externalRateLimitPerMin: toInt(process.env.EXTERNAL_RATE_LIMIT_PER_MIN, 120),
   },
 });

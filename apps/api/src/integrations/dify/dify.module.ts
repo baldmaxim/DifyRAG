@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DifyClient } from './dify.client';
+import { DifyAppService } from './dify-app.service';
 import { DifyDatasetMappingService } from './dify-dataset-mapping.service';
 import { DifyDocumentSyncService } from './dify-document-sync.service';
 import { DifyHealthService } from './dify-health.service';
@@ -8,6 +9,7 @@ import { DifySearchService } from './dify-search.service';
 @Module({
   providers: [
     DifyClient,
+    DifyAppService,
     DifyDatasetMappingService,
     DifyDocumentSyncService,
     DifyHealthService,
@@ -15,6 +17,7 @@ import { DifySearchService } from './dify-search.service';
   ],
   exports: [
     DifyClient,
+    DifyAppService,
     DifyDatasetMappingService,
     DifyDocumentSyncService,
     DifyHealthService,

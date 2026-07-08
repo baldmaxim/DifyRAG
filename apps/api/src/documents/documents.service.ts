@@ -62,6 +62,29 @@ export class DocumentsService {
     });
   }
 
+  /** Non-RAG administrative metadata search (title/description/counterparty/project/folder). */
+  async metadataSearch(query: string, limit = 50): Promise<Document[]> {
+    const q = query.trim();
+    if (!q) return [];
+    return this.prisma.document.findMany({
+      where: {
+        deletedAt: null,
+        OR: [
+          { title: { contains: q, mode: 'insensitive' } },
+          { description: { contains: q, mode: 'insensitive' } },
+          { counterparty: { contains: q, mode: 'insensitive' } },
+          { contractNumber: { contains: q, mode: 'insensitive' } },
+          { folder: { path: { contains: q, mode: 'insensitive' } } },
+          { project: { code: { contains: q, mode: 'insensitive' } } },
+          { project: { name: { contains: q, mode: 'insensitive' } } },
+        ],
+      },
+      include: DOCUMENT_INCLUDE,
+      orderBy: { updatedAt: 'desc' },
+      take: limit,
+    });
+  }
+
   async getById(id: string, includeDeleted = false): Promise<Document> {
     const document = await this.prisma.document.findUnique({
       where: { id },

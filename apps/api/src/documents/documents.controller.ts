@@ -34,6 +34,11 @@ export class DocumentsController {
     return this.documents.list(query);
   }
 
+  @Get('search')
+  metadataSearch(@Query('q') q: string): Promise<Document[]> {
+    return this.documents.metadataSearch(q ?? '');
+  }
+
   @Get(':id')
   getById(@Param('id') id: string): Promise<Document> {
     return this.documents.getById(id);

@@ -13,10 +13,12 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { DepartmentsModule } from './departments/departments.module';
 import { DocumentsModule } from './documents/documents.module';
+import { ExternalModule } from './external/external.module';
 import { FoldersModule } from './folders/folders.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { ProcessingModule } from './processing/processing.module';
 import { ProjectsModule } from './projects/projects.module';
+import { SearchModule } from './search/search.module';
 import { StorageModule } from './storage/storage.module';
 
 @Module({
@@ -37,6 +39,8 @@ import { StorageModule } from './storage/storage.module';
     DocumentsModule,
     IntegrationsModule,
     ProcessingModule,
+    SearchModule,
+    ExternalModule,
   ],
   controllers: [AppController],
   providers: [
