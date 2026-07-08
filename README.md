@@ -1,67 +1,61 @@
-# Dify-first Document Knowledge Portal — набор промтов для Claude Code
+# Document Knowledge Portal
 
-В архиве — `CLAUDE.md` и 7 промтов для поэтапной реализации приложения, где **Dify является главным RAG-движком**.
+Dify-first document management and RAG-indexing portal for a construction company.
+**Dify is the primary RAG engine** — the app stores originals in Cloud.ru S3, metadata in
+PostgreSQL, and sends files to Dify; Dify parses/chunks, calls LM Studio for embeddings, and
+writes to Qdrant. The app **never writes to Qdrant directly** (Qdrant is read-only health only).
 
-Главная архитектурная идея:
-
-```text
-Пользователь / Внешний API
-        │
-        ▼
-Document Knowledge Portal
-React + AntD / NestJS
-        │
-        ├── Managed PostgreSQL
-        │     metadata, версии, права, jobs, audit, Dify mappings
-        │
-        ├── Cloud.ru S3
-        │     оригиналы файлов, версии, Object Lock / Versioning
-        │
-        ▼
-Processing Worker
-pg-boss
-        │
-        ▼
-Dify Knowledge API
-create-by-file / update-by-file / indexing-status / retrieve
-        │
-        ├── LM Studio
-        │     Qwen3-Embedding-8B через OpenAI-compatible /v1/embeddings
-        │
-        ▼
-Qdrant
-Dify-managed vector storage
-```
-
-Важное правило: приложение **не пишет напрямую в Qdrant**. Документы отправляются в Dify, а Dify сам делает парсинг, чанкинг, embeddings через LM Studio и запись в Qdrant.
-
-## Как использовать
-
-1. Создайте пустой репозиторий.
-2. Скопируйте `CLAUDE.md` в корень репозитория.
-3. Запускайте Claude Code в корне проекта.
-4. Давайте промты строго по порядку:
-   - `01_architecture_and_monorepo.md`
-   - `02_infra_dify_qdrant_lmstudio_s3.md`
-   - `03_backend_core_postgres_auth_s3_documents.md`
-   - `04_dify_ingestion_processing_pipeline.md`
-   - `05_search_external_api_and_permissions.md`
-   - `06_frontend_antd_enterprise_ui.md`
-   - `07_tests_security_deploy_final_review.md`
-
-## Целевой стек
+## Monorepo layout
 
 ```text
-Frontend: React + Vite + TypeScript + Ant Design 5 + ProComponents
-Backend: NestJS + TypeScript
-ORM: Prisma
-DB: Managed Service for PostgreSQL
-Storage: Cloud.ru S3-compatible Object Storage
-Queue: pg-boss
-RAG engine: Dify
-Vector DB: Qdrant, управляется Dify
-Embedding provider: LM Studio OpenAI-compatible endpoint
-Embedding model: Qwen/Qwen3-Embedding-8B, dimension 4096
-Auth: JWT + API keys
-Deploy: Docker / Docker Compose, внешний Managed PostgreSQL
+apps/
+  api/        NestJS + TypeScript backend (Prisma, S3, Dify integration)
+  web/        React + Vite + Ant Design 5 frontend
+packages/
+  shared/     Shared enums/types (@dkp/shared)
+docs/         Architecture & operations documentation
+infra/        Dify / Qdrant / LM Studio / platform deployment configs
 ```
+
+## Prerequisites
+
+- Node.js >= 20 (tested on Node 24)
+- pnpm (via `corepack enable`)
+- Docker + Docker Compose (for the local dev database and infra stack)
+
+## Commands
+
+```bash
+pnpm install       # install all workspace dependencies
+pnpm dev           # run api (:3000) and web (:5173) in parallel
+pnpm build         # build @dkp/shared, then api and web
+pnpm lint          # eslint across all packages
+pnpm typecheck     # tsc --noEmit across all packages
+pnpm test          # vitest across all packages
+pnpm format        # prettier --write
+
+# database (backend)
+docker compose -f docker-compose.dev.yml up -d   # local Postgres
+pnpm db:migrate                                   # apply Prisma migrations
+pnpm seed                                          # idempotent seed (admin, doc types, departments)
+```
+
+## Environment
+
+Copy the example env files and fill them in (secrets live only on the backend):
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+## Documentation
+
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
+  [docs/DIFY_FIRST_ARCHITECTURE.md](docs/DIFY_FIRST_ARCHITECTURE.md)
+- Data & API: [docs/DATABASE_MODEL.md](docs/DATABASE_MODEL.md),
+  [docs/API_DESIGN.md](docs/API_DESIGN.md)
+- RAG flows: [docs/RAG_PROCESSING_FLOW.md](docs/RAG_PROCESSING_FLOW.md),
+  [docs/RAG_SEARCH_API.md](docs/RAG_SEARCH_API.md), [docs/S3_STORAGE_FLOW.md](docs/S3_STORAGE_FLOW.md)
+- Deploy / RAG environment: [docs/END_TO_END_RAG_DEPLOYMENT.md](docs/END_TO_END_RAG_DEPLOYMENT.md),
+  [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)

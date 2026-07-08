@@ -1,0 +1,24 @@
+# Local development database only.
+# In production the app uses an external Managed PostgreSQL via DATABASE_URL —
+# do NOT run a Postgres container in production.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dkp-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: document_portal
+    ports:
+      - '5432:5432'
+    volumes:
+      - dkp_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d document_portal']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  dkp_pg_data:
