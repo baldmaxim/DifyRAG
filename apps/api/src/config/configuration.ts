@@ -65,6 +65,12 @@ export interface QueueConfig {
   pgBossSchema: string;
 }
 
+export interface ProcessingConfig {
+  workerEnabled: boolean;
+  pollIntervalMs: number;
+  maxAttempts: number;
+}
+
 export interface RootConfig {
   app: AppConfig;
   database: DatabaseConfig;
@@ -74,6 +80,7 @@ export interface RootConfig {
   lmStudio: LmStudioConfig;
   qdrant: QdrantConfig;
   queue: QueueConfig;
+  processing: ProcessingConfig;
 }
 
 const toBool = (value: string | undefined, fallback = false): boolean => {
@@ -146,5 +153,10 @@ export const configuration = (): RootConfig => ({
   },
   queue: {
     pgBossSchema: process.env.PG_BOSS_SCHEMA ?? 'pgboss',
+  },
+  processing: {
+    workerEnabled: toBool(process.env.PROCESSING_WORKER_ENABLED, false),
+    pollIntervalMs: toInt(process.env.PROCESSING_POLL_INTERVAL_MS, 4000),
+    maxAttempts: toInt(process.env.PROCESSING_MAX_ATTEMPTS, 5),
   },
 });

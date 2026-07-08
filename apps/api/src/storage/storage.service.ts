@@ -116,6 +116,17 @@ export class StorageService {
     return this.headObject(key);
   }
 
+  /** Download an object's bytes (used to forward file content to Dify). */
+  async getObjectBytes(key: string): Promise<Uint8Array> {
+    const out = await this.getClient().send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    if (!out.Body) {
+      throw new Error(`Object ${key} has no body`);
+    }
+    return out.Body.transformToByteArray();
+  }
+
   async copyObject(sourceKey: string, destKey: string): Promise<void> {
     await this.getClient().send(
       new CopyObjectCommand({

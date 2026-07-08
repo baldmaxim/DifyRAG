@@ -268,17 +268,18 @@ model Document {
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  project        Project?            @relation(fields: [projectId], references: [id])
-  department     Department?         @relation(fields: [departmentId], references: [id])
-  folder         Folder              @relation(fields: [folderId], references: [id])
-  documentType   DocumentType        @relation(fields: [documentTypeId], references: [id])
-  currentVersion DocumentVersion?    @relation("CurrentVersion", fields: [currentVersionId], references: [id])
-  versions       DocumentVersion[]   @relation("DocumentVersions")
+  project        Project?              @relation(fields: [projectId], references: [id])
+  department     Department?           @relation(fields: [departmentId], references: [id])
+  folder         Folder                @relation(fields: [folderId], references: [id])
+  documentType   DocumentType          @relation(fields: [documentTypeId], references: [id])
+  currentVersion DocumentVersion?      @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  versions       DocumentVersion[]     @relation("DocumentVersions")
   uploadSessions FileUploadSession[]
   processingJobs ProcessingJob[]
-  createdBy      User                @relation("DocumentCreatedBy", fields: [createdByUserId], references: [id])
-  updatedBy      User?               @relation("DocumentUpdatedBy", fields: [updatedByUserId], references: [id])
-  deletedBy      User?               @relation("DocumentDeletedBy", fields: [deletedByUserId], references: [id])
+  difyMappings   DifyDocumentMapping[]
+  createdBy      User                  @relation("DocumentCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy      User?                 @relation("DocumentUpdatedBy", fields: [updatedByUserId], references: [id])
+  deletedBy      User?                 @relation("DocumentDeletedBy", fields: [deletedByUserId], references: [id])
 
   @@index([projectId])
   @@index([folderId])
@@ -302,10 +303,11 @@ model DocumentVersion {
   isCurrent        Boolean      @default(false) @map("is_current")
   createdAt        DateTime     @default(now()) @map("created_at")
 
-  document       Document        @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
-  currentOf      Document?       @relation("CurrentVersion")
-  uploadedBy     User?           @relation(fields: [uploadedByUserId], references: [id])
+  document       Document              @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentOf      Document?             @relation("CurrentVersion")
+  uploadedBy     User?                 @relation(fields: [uploadedByUserId], references: [id])
   processingJobs ProcessingJob[]
+  difyMappings   DifyDocumentMapping[]
 
   @@unique([documentId, versionNo])
   @@index([documentId])
@@ -390,4 +392,141 @@ model ProjectMember {
 
   @@unique([projectId, userId])
   @@map("project_members")
+}
+
+// ── Dify integration & processing (prompt 04) ────────────────
+
+enum DifyDatasetStatus {
+  pending
+  creating
+  active
+  error
+  archived
+}
+
+enum DifyDatasetStrategy {
+  project
+  project_section
+  company_section
+}
+
+enum DifyMappingIndexingStatus {
+  pending
+  uploading
+  waiting
+  parsing
+  cleaning
+  splitting
+  indexing
+  completed
+  error
+  archived
+  disabled
+}
+
+enum IntegrationProvider {
+  dify
+  lmstudio
+  qdrant
+  s3
+}
+
+enum IntegrationStatus {
+  ok
+  degraded
+  down
+  setup_required
+}
+
+enum RagSearchStatus {
+  success
+  error
+}
+
+model DifyDatasetMapping {
+  id                     String              @id @default(uuid()) @db.Uuid
+  scope                  Scope
+  projectId              String?             @map("project_id") @db.Uuid
+  departmentId           String?             @map("department_id") @db.Uuid
+  folderGroup            String              @map("folder_group")
+  folderPathPrefix       String?             @map("folder_path_prefix")
+  difyDatasetId          String?             @map("dify_dataset_id")
+  difyDatasetName        String              @map("dify_dataset_name")
+  difyDatasetDescription String?             @map("dify_dataset_description")
+  strategy               DifyDatasetStrategy @default(project_section)
+  embeddingProvider      String?             @map("embedding_provider")
+  embeddingModel         String?             @map("embedding_model")
+  indexingTechnique      String?             @map("indexing_technique")
+  status                 DifyDatasetStatus   @default(pending)
+  errorMessage           String?             @map("error_message")
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
+
+  documents DifyDocumentMapping[]
+
+  @@unique([scope, projectId, folderGroup])
+  @@index([projectId])
+  @@index([status])
+  @@map("dify_dataset_mappings")
+}
+
+model DifyDocumentMapping {
+  id                   String                    @id @default(uuid()) @db.Uuid
+  documentId           String                    @map("document_id") @db.Uuid
+  documentVersionId    String                    @map("document_version_id") @db.Uuid
+  difyDatasetMappingId String                    @map("dify_dataset_mapping_id") @db.Uuid
+  difyDatasetId        String                    @map("dify_dataset_id")
+  difyDocumentId       String?                   @map("dify_document_id")
+  difyBatch            String?                   @map("dify_batch")
+  difyUploadFileId     String?                   @map("dify_upload_file_id")
+  indexingStatus       DifyMappingIndexingStatus @default(pending) @map("indexing_status")
+  completedSegments    Int?                      @map("completed_segments")
+  totalSegments        Int?                      @map("total_segments")
+  errorMessage         String?                   @map("error_message")
+  lastPolledAt         DateTime?                 @map("last_polled_at")
+  indexedAt            DateTime?                 @map("indexed_at")
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+
+  document        Document           @relation(fields: [documentId], references: [id])
+  documentVersion DocumentVersion    @relation(fields: [documentVersionId], references: [id])
+  datasetMapping  DifyDatasetMapping @relation(fields: [difyDatasetMappingId], references: [id])
+
+  @@unique([documentVersionId, difyDatasetMappingId])
+  @@index([documentId])
+  @@index([indexingStatus])
+  @@map("dify_document_mappings")
+}
+
+model RagSearchLog {
+  id            String          @id @default(uuid()) @db.Uuid
+  actorType     ActorType       @map("actor_type")
+  actorUserId   String?         @map("actor_user_id") @db.Uuid
+  actorApiKeyId String?         @map("actor_api_key_id") @db.Uuid
+  query         String
+  scope         String?
+  projectId     String?         @map("project_id") @db.Uuid
+  folderPath    String?         @map("folder_path")
+  datasetIds    String[]        @map("dataset_ids")
+  topK          Int             @map("top_k")
+  resultCount   Int             @map("result_count")
+  latencyMs     Int             @map("latency_ms")
+  status        RagSearchStatus
+  errorMessage  String?         @map("error_message")
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("rag_search_logs")
+}
+
+model IntegrationHealthCheck {
+  id        String              @id @default(uuid()) @db.Uuid
+  provider  IntegrationProvider
+  status    IntegrationStatus
+  latencyMs Int?                @map("latency_ms")
+  details   Json
+  checkedAt DateTime            @default(now()) @map("checked_at")
+
+  @@index([provider, checkedAt])
+  @@map("integration_health_checks")
 }

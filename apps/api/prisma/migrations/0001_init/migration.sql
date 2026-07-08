@@ -43,6 +43,24 @@ CREATE TYPE "ActorType" AS ENUM ('user', 'api_key', 'system');
 -- CreateEnum
 CREATE TYPE "ProjectMemberRole" AS ENUM ('owner', 'manager', 'editor', 'viewer');
 
+-- CreateEnum
+CREATE TYPE "DifyDatasetStatus" AS ENUM ('pending', 'creating', 'active', 'error', 'archived');
+
+-- CreateEnum
+CREATE TYPE "DifyDatasetStrategy" AS ENUM ('project', 'project_section', 'company_section');
+
+-- CreateEnum
+CREATE TYPE "DifyMappingIndexingStatus" AS ENUM ('pending', 'uploading', 'waiting', 'parsing', 'cleaning', 'splitting', 'indexing', 'completed', 'error', 'archived', 'disabled');
+
+-- CreateEnum
+CREATE TYPE "IntegrationProvider" AS ENUM ('dify', 'lmstudio', 'qdrant', 's3');
+
+-- CreateEnum
+CREATE TYPE "IntegrationStatus" AS ENUM ('ok', 'degraded', 'down', 'setup_required');
+
+-- CreateEnum
+CREATE TYPE "RagSearchStatus" AS ENUM ('success', 'error');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -260,6 +278,84 @@ CREATE TABLE "project_members" (
     CONSTRAINT "project_members_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "dify_dataset_mappings" (
+    "id" UUID NOT NULL,
+    "scope" "Scope" NOT NULL,
+    "project_id" UUID,
+    "department_id" UUID,
+    "folder_group" TEXT NOT NULL,
+    "folder_path_prefix" TEXT,
+    "dify_dataset_id" TEXT,
+    "dify_dataset_name" TEXT NOT NULL,
+    "dify_dataset_description" TEXT,
+    "strategy" "DifyDatasetStrategy" NOT NULL DEFAULT 'project_section',
+    "embedding_provider" TEXT,
+    "embedding_model" TEXT,
+    "indexing_technique" TEXT,
+    "status" "DifyDatasetStatus" NOT NULL DEFAULT 'pending',
+    "error_message" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "dify_dataset_mappings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "dify_document_mappings" (
+    "id" UUID NOT NULL,
+    "document_id" UUID NOT NULL,
+    "document_version_id" UUID NOT NULL,
+    "dify_dataset_mapping_id" UUID NOT NULL,
+    "dify_dataset_id" TEXT NOT NULL,
+    "dify_document_id" TEXT,
+    "dify_batch" TEXT,
+    "dify_upload_file_id" TEXT,
+    "indexing_status" "DifyMappingIndexingStatus" NOT NULL DEFAULT 'pending',
+    "completed_segments" INTEGER,
+    "total_segments" INTEGER,
+    "error_message" TEXT,
+    "last_polled_at" TIMESTAMP(3),
+    "indexed_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "dify_document_mappings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "rag_search_logs" (
+    "id" UUID NOT NULL,
+    "actor_type" "ActorType" NOT NULL,
+    "actor_user_id" UUID,
+    "actor_api_key_id" UUID,
+    "query" TEXT NOT NULL,
+    "scope" TEXT,
+    "project_id" UUID,
+    "folder_path" TEXT,
+    "dataset_ids" TEXT[],
+    "top_k" INTEGER NOT NULL,
+    "result_count" INTEGER NOT NULL,
+    "latency_ms" INTEGER NOT NULL,
+    "status" "RagSearchStatus" NOT NULL,
+    "error_message" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "rag_search_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "integration_health_checks" (
+    "id" UUID NOT NULL,
+    "provider" "IntegrationProvider" NOT NULL,
+    "status" "IntegrationStatus" NOT NULL,
+    "latency_ms" INTEGER,
+    "details" JSONB NOT NULL,
+    "checked_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "integration_health_checks_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -326,6 +422,30 @@ CREATE INDEX "audit_logs_created_at_idx" ON "audit_logs"("created_at");
 -- CreateIndex
 CREATE UNIQUE INDEX "project_members_project_id_user_id_key" ON "project_members"("project_id", "user_id");
 
+-- CreateIndex
+CREATE INDEX "dify_dataset_mappings_project_id_idx" ON "dify_dataset_mappings"("project_id");
+
+-- CreateIndex
+CREATE INDEX "dify_dataset_mappings_status_idx" ON "dify_dataset_mappings"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "dify_dataset_mappings_scope_project_id_folder_group_key" ON "dify_dataset_mappings"("scope", "project_id", "folder_group");
+
+-- CreateIndex
+CREATE INDEX "dify_document_mappings_document_id_idx" ON "dify_document_mappings"("document_id");
+
+-- CreateIndex
+CREATE INDEX "dify_document_mappings_indexing_status_idx" ON "dify_document_mappings"("indexing_status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "dify_document_mappings_document_version_id_dify_dataset_map_key" ON "dify_document_mappings"("document_version_id", "dify_dataset_mapping_id");
+
+-- CreateIndex
+CREATE INDEX "rag_search_logs_created_at_idx" ON "rag_search_logs"("created_at");
+
+-- CreateIndex
+CREATE INDEX "integration_health_checks_provider_checked_at_idx" ON "integration_health_checks"("provider", "checked_at");
+
 -- AddForeignKey
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -385,4 +505,13 @@ ALTER TABLE "project_members" ADD CONSTRAINT "project_members_project_id_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "project_members" ADD CONSTRAINT "project_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "dify_document_mappings" ADD CONSTRAINT "dify_document_mappings_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "documents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "dify_document_mappings" ADD CONSTRAINT "dify_document_mappings_document_version_id_fkey" FOREIGN KEY ("document_version_id") REFERENCES "document_versions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "dify_document_mappings" ADD CONSTRAINT "dify_document_mappings_dify_dataset_mapping_id_fkey" FOREIGN KEY ("dify_dataset_mapping_id") REFERENCES "dify_dataset_mappings"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

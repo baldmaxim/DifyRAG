@@ -27,6 +27,7 @@ describe('StorageService delete policy', () => {
         'copyObject',
         'createPresignedGetUrl',
         'createPresignedPutUrl',
+        'getObjectBytes',
         'getObjectMetadata',
         'headObject',
         'isConfigured',

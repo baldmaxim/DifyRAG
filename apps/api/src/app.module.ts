@@ -14,6 +14,8 @@ import { RolesGuard } from './auth/guards/roles.guard';
 import { DepartmentsModule } from './departments/departments.module';
 import { DocumentsModule } from './documents/documents.module';
 import { FoldersModule } from './folders/folders.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { ProcessingModule } from './processing/processing.module';
 import { ProjectsModule } from './projects/projects.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -33,6 +35,8 @@ import { StorageModule } from './storage/storage.module';
     FoldersModule,
     DepartmentsModule,
     DocumentsModule,
+    IntegrationsModule,
+    ProcessingModule,
   ],
   controllers: [AppController],
   providers: [
