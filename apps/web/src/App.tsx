@@ -13,6 +13,7 @@ import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ProcessingJobsPage } from './pages/ProcessingJobsPage';
 import { SearchPage } from './pages/SearchPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App(): React.ReactElement {
   return (
@@ -32,6 +33,7 @@ function App(): React.ReactElement {
           <Route path="/api-keys" element={<ApiKeysPage />} />
           <Route path="/processing-jobs" element={<ProcessingJobsPage />} />
           <Route path="/audit-logs" element={<AuditLogsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -9,6 +9,7 @@ import {
   FileTextOutlined,
   LogoutOutlined,
   SearchOutlined,
+  SettingOutlined,
   TeamOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
@@ -31,6 +32,7 @@ const MENU = [
   { key: '/api-keys', icon: <ApiOutlined />, label: 'API-ключи' },
   { key: '/processing-jobs', icon: <ThunderboltOutlined />, label: 'Обработка' },
   { key: '/audit-logs', icon: <AuditOutlined />, label: 'Аудит' },
+  { key: '/settings', icon: <SettingOutlined />, label: 'Настройки' },
 ];
 
 export function AppLayout(): React.ReactElement {

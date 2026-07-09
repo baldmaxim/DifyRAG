@@ -175,4 +175,19 @@ export interface SearchResponse {
   warnings: string[];
 }
 
+export interface MaskedSettingField {
+  field: string;
+  label: string;
+  type: 'string' | 'number' | 'boolean';
+  secret: boolean;
+  value: unknown;
+  configured: boolean;
+}
+
+export interface MaskedSettingGroup {
+  group: string;
+  label: string;
+  fields: MaskedSettingField[];
+}
+
 export type { DifyIndexingStatus };

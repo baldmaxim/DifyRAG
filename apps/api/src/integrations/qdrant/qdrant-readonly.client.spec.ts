@@ -24,7 +24,7 @@ describe('QdrantReadonlyClient is read-only', () => {
 
   it('exposes only read operations', () => {
     const publicApi = methods.filter(
-      (m) => m !== 'constructor' && !['headers', 'base', 'get'].includes(m),
+      (m) => m !== 'constructor' && !['headers', 'base', 'get', 'cfg'].includes(m),
     );
     expect(publicApi.sort()).toEqual(['getCollection', 'health', 'isConfigured', 'listCollections'].sort());
   });

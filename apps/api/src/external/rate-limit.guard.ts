@@ -5,9 +5,8 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import type { SecurityConfig } from '../config/configuration';
 import type { AuthenticatedRequest } from '../common/types/authenticated-request';
+import { SettingsService } from '../settings/settings.service';
 
 interface Bucket {
   count: number;
@@ -21,11 +20,12 @@ interface Bucket {
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly buckets = new Map<string, Bucket>();
-  private readonly limit: number;
   private readonly windowMs = 60_000;
 
-  constructor(config: ConfigService) {
-    this.limit = config.getOrThrow<SecurityConfig>('security').externalRateLimitPerMin;
+  constructor(private readonly settings: SettingsService) {}
+
+  private get limit(): number {
+    return this.settings.security().externalRateLimitPerMin;
   }
 
   canActivate(context: ExecutionContext): boolean {

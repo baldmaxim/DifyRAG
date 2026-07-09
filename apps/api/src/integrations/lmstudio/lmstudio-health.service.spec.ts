@@ -1,17 +1,17 @@
-import type { ConfigService } from '@nestjs/config';
 import { describe, expect, it, vi } from 'vitest';
 import type { LmStudioConfig } from '../../config/configuration';
+import type { SettingsService } from '../../settings/settings.service';
 import { LmStudioHealthService } from './lmstudio-health.service';
 import type { LmStudioClient } from './lmstudio.client';
 
-function configWith(expectedEmbeddingDimension: number): ConfigService {
+function configWith(expectedEmbeddingDimension: number): SettingsService {
   const cfg: LmStudioConfig = {
     baseUrl: 'http://localhost:1234/v1',
     embeddingModel: 'qwen3-embedding-8b',
     expectedEmbeddingDimension,
     timeoutMs: 5000,
   };
-  return { getOrThrow: () => cfg } as unknown as ConfigService;
+  return { lmStudio: () => cfg } as unknown as SettingsService;
 }
 const config = configWith(4096);
 

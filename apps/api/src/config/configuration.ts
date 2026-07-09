@@ -73,6 +73,8 @@ export interface ProcessingConfig {
 
 export interface SecurityConfig {
   externalRateLimitPerMin: number;
+  /** Bootstrap-only (env): AES key/passphrase for encrypting UI-managed secrets at rest. */
+  settingsEncryptionKey: string | undefined;
 }
 
 export interface RootConfig {
@@ -169,5 +171,6 @@ export const configuration = (): RootConfig => ({
   },
   security: {
     externalRateLimitPerMin: toInt(process.env.EXTERNAL_RATE_LIMIT_PER_MIN, 120),
+    settingsEncryptionKey: process.env.SETTINGS_ENCRYPTION_KEY,
   },
 });

@@ -1,7 +1,7 @@
-import type { ConfigService } from '@nestjs/config';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DifyConfig } from '../../config/configuration';
 import type { PrismaService } from '../../common/prisma/prisma.service';
+import type { SettingsService } from '../../settings/settings.service';
 import type { StorageService } from '../../storage/storage.service';
 import type { DifyClient } from './dify.client';
 import type { DifyDatasetMappingService } from './dify-dataset-mapping.service';
@@ -13,7 +13,7 @@ const difyConfig = {
   defaultDocLanguage: 'Russian',
 } as unknown as DifyConfig;
 
-const config = { getOrThrow: () => difyConfig } as unknown as ConfigService;
+const config = { dify: () => difyConfig } as unknown as SettingsService;
 
 const baseDoc = {
   id: 'doc-1',

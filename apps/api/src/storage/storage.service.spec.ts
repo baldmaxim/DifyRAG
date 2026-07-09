@@ -19,7 +19,7 @@ describe('StorageService delete policy', () => {
 
   it('exposes only the allowed storage operations', () => {
     const publicApi = methodNames.filter(
-      (m) => !m.startsWith('_') && m !== 'constructor' && m !== 'getClient',
+      (m) => !m.startsWith('_') && m !== 'constructor' && m !== 'getClient' && m !== 'cfg',
     );
     expect(publicApi.sort()).toEqual(
       [

@@ -1,6 +1,6 @@
-import type { ConfigService } from '@nestjs/config';
 import { describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../../common/prisma/prisma.service';
+import type { SettingsService } from '../../settings/settings.service';
 import { DifyApiError, DifyClient } from './dify.client';
 import { DatasetSetupRequiredError, DifyDatasetMappingService } from './dify-dataset-mapping.service';
 
@@ -24,11 +24,9 @@ function build(opts: {
   const dify = { getDataset, createDataset } as unknown as DifyClient;
   const prisma = { difyDatasetMapping: { update } } as unknown as PrismaService;
   const config = {
-    getOrThrow: (key: string) =>
-      key === 'lmStudio'
-        ? { embeddingModel: 'qwen3-embedding-8b' }
-        : { autoCreateDatasets: opts.autoCreate ?? true, defaultIndexingTechnique: 'high_quality' },
-  } as unknown as ConfigService;
+    dify: () => ({ autoCreateDatasets: opts.autoCreate ?? true, defaultIndexingTechnique: 'high_quality' }),
+    lmStudio: () => ({ embeddingModel: 'qwen3-embedding-8b' }),
+  } as unknown as SettingsService;
 
   const service = new DifyDatasetMappingService(prisma, dify, config);
   return { service, createDataset, getDataset, update };

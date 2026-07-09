@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { LmStudioConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 
 interface OpenAiModelsResponse {
   data: Array<{ id: string; object?: string }>;
@@ -17,10 +17,10 @@ interface OpenAiEmbeddingResponse {
  */
 @Injectable()
 export class LmStudioClient {
-  private readonly cfg: LmStudioConfig;
+  constructor(private readonly settings: SettingsService) {}
 
-  constructor(config: ConfigService) {
-    this.cfg = config.getOrThrow<LmStudioConfig>('lmStudio');
+  private get cfg(): LmStudioConfig {
+    return this.settings.lmStudio();
   }
 
   isConfigured(): boolean {

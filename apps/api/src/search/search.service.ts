@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Prisma } from '@prisma/client';
 import type { DifyConfig } from '../config/configuration';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import type { ActorContext } from '../common/types/actor-context';
 import { DifyAppService } from '../integrations/dify/dify-app.service';
 import { DifySearchService, type RetrievedChunk } from '../integrations/dify/dify-search.service';
@@ -19,16 +19,16 @@ export interface SearchExecuteOptions {
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name);
-  private readonly cfg: DifyConfig;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly resolver: DatasetResolverService,
     private readonly difySearch: DifySearchService,
     private readonly difyApp: DifyAppService,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   async search(dto: SearchDto, options: SearchExecuteOptions): Promise<SearchResponse> {

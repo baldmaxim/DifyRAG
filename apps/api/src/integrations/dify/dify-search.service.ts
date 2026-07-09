@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { DifyConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 import { DifyClient } from './dify.client';
 
 export interface RetrievedChunk {
@@ -16,13 +16,13 @@ export interface RetrievedChunk {
  */
 @Injectable()
 export class DifySearchService {
-  private readonly cfg: DifyConfig;
-
   constructor(
     private readonly dify: DifyClient,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   async retrieveFromDataset(

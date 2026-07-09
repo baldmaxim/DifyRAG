@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { QdrantConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 
 /**
  * READ-ONLY Qdrant client. Qdrant is managed by Dify; the app must NEVER write.
@@ -9,10 +9,10 @@ import type { QdrantConfig } from '../../config/configuration';
  */
 @Injectable()
 export class QdrantReadonlyClient {
-  private readonly cfg: QdrantConfig;
+  constructor(private readonly settings: SettingsService) {}
 
-  constructor(config: ConfigService) {
-    this.cfg = config.getOrThrow<QdrantConfig>('qdrant');
+  private get cfg(): QdrantConfig {
+    return this.settings.qdrant();
   }
 
   isConfigured(): boolean {

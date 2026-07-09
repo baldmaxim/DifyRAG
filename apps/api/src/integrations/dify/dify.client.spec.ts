@@ -1,6 +1,6 @@
-import type { ConfigService } from '@nestjs/config';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DifyConfig } from '../../config/configuration';
+import type { SettingsService } from '../../settings/settings.service';
 import { DifyApiError, DifyClient } from './dify.client';
 
 const difyConfig: DifyConfig = {
@@ -21,7 +21,7 @@ const difyConfig: DifyConfig = {
   retrieveScoreThreshold: 0.2,
 };
 
-const config = { getOrThrow: () => difyConfig } as unknown as ConfigService;
+const config = { dify: () => difyConfig } as unknown as SettingsService;
 
 function mockFetch(status: number, body: unknown): void {
   vi.stubGlobal(
@@ -98,8 +98,8 @@ describe('DifyClient', () => {
 
   it('throws setup_required when not configured', async () => {
     const unconfigured = {
-      getOrThrow: () => ({ ...difyConfig, knowledgeApiKey: undefined }),
-    } as unknown as ConfigService;
+      dify: () => ({ ...difyConfig, knowledgeApiKey: undefined }),
+    } as unknown as SettingsService;
     const client = new DifyClient(unconfigured);
     await expect(client.listDatasets()).rejects.toThrow(/not configured/i);
   });

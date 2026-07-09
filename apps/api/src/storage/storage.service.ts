@@ -7,8 +7,8 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { S3Config } from '../config/configuration';
+import { SettingsService } from '../settings/settings.service';
 
 export interface PresignedPutParams {
   key: string;
@@ -39,15 +39,19 @@ export interface ObjectMetadata {
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly cfg: S3Config;
   private client: S3Client | null = null;
+  private clientVersion = -1;
 
-  constructor(private readonly config: ConfigService) {
-    this.cfg = this.config.getOrThrow<S3Config>('s3');
+  constructor(private readonly settings: SettingsService) {}
+
+  /** Live effective S3 config (env overlaid with UI settings). */
+  private get cfg(): S3Config {
+    return this.settings.s3();
   }
 
   isConfigured(): boolean {
-    return Boolean(this.cfg.endpoint && this.cfg.bucket && this.cfg.accessKeyId && this.cfg.secretAccessKey);
+    const c = this.cfg;
+    return Boolean(c.endpoint && c.bucket && c.accessKeyId && c.secretAccessKey);
   }
 
   get bucket(): string {
@@ -61,16 +65,20 @@ export class StorageService {
     if (!this.isConfigured()) {
       throw new ServiceUnavailableException('S3 storage is not configured (setup_required)');
     }
-    if (!this.client) {
+    // Rebuild the client when settings change (e.g. S3 keys edited in the UI).
+    const version = this.settings.getVersion();
+    if (!this.client || this.clientVersion !== version) {
+      const c = this.cfg;
       this.client = new S3Client({
-        endpoint: this.cfg.endpoint,
-        region: this.cfg.region,
-        forcePathStyle: this.cfg.forcePathStyle,
+        endpoint: c.endpoint,
+        region: c.region,
+        forcePathStyle: c.forcePathStyle,
         credentials: {
-          accessKeyId: this.cfg.accessKeyId as string,
-          secretAccessKey: this.cfg.secretAccessKey as string,
+          accessKeyId: c.accessKeyId as string,
+          secretAccessKey: c.secretAccessKey as string,
         },
       });
+      this.clientVersion = version;
     }
     return this.client;
   }

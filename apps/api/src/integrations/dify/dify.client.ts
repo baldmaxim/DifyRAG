@@ -1,6 +1,6 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { DifyConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 import type {
   CreateDatasetParams,
   CreateDocumentByFileParams,
@@ -30,10 +30,11 @@ interface RequestOptions {
 @Injectable()
 export class DifyClient {
   private readonly logger = new Logger(DifyClient.name);
-  private readonly cfg: DifyConfig;
 
-  constructor(config: ConfigService) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
+  constructor(private readonly settings: SettingsService) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   isConfigured(): boolean {

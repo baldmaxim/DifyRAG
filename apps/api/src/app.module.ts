@@ -20,6 +20,7 @@ import { ProcessingModule } from './processing/processing.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ReportingModule } from './reporting/reporting.module';
 import { SearchModule } from './search/search.module';
+import { SettingsModule } from './settings/settings.module';
 import { StorageModule } from './storage/storage.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { StorageModule } from './storage/storage.module';
     SearchModule,
     ExternalModule,
     ReportingModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -11,6 +11,7 @@ import type {
   DocumentVersion,
   Folder,
   HealthResult,
+  MaskedSettingGroup,
   ProcessingJobRow,
   Project,
   SearchResponse,
@@ -109,6 +110,15 @@ export const processingApi = {
   list: (status?: string) =>
     api.get<ProcessingJobRow[]>('/processing/jobs', { params: { status } }).then((r) => r.data),
   retry: (id: string) => api.post<ProcessingJobRow>(`/processing/jobs/${id}/retry`).then((r) => r.data),
+};
+
+// ── Settings ──────────────────────────────────────────────
+export const settingsApi = {
+  list: () => api.get<MaskedSettingGroup[]>('/settings').then((r) => r.data),
+  update: (group: string, patch: Record<string, unknown>) =>
+    api.patch<MaskedSettingGroup>(`/settings/${group}`, patch).then((r) => r.data),
+  test: (group: string) =>
+    api.post<HealthResult | { supported: false }>(`/settings/${group}/test`).then((r) => r.data),
 };
 
 // ── Reporting ─────────────────────────────────────────────

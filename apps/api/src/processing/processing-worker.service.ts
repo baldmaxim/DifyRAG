@@ -4,11 +4,11 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { ProcessingJob } from '@prisma/client';
 import { ProcessingJobType } from '@dkp/shared';
 import type { ProcessingConfig } from '../config/configuration';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import { DifyDocumentSyncService } from '../integrations/dify/dify-document-sync.service';
 
 /**
@@ -22,16 +22,17 @@ import { DifyDocumentSyncService } from '../integrations/dify/dify-document-sync
 @Injectable()
 export class ProcessingWorkerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProcessingWorkerService.name);
-  private readonly cfg: ProcessingConfig;
   private timer: NodeJS.Timeout | null = null;
   private running = false;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly difySync: DifyDocumentSyncService,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<ProcessingConfig>('processing');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): ProcessingConfig {
+    return this.settings.processing();
   }
 
   onModuleInit(): void {

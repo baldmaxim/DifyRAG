@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { DifyDatasetMapping, Scope } from '@prisma/client';
-import type { DifyConfig, LmStudioConfig } from '../../config/configuration';
+import type { DifyConfig } from '../../config/configuration';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { SettingsService } from '../../settings/settings.service';
 import { DifyApiError, DifyClient } from './dify.client';
 import {
   companyDatasetName,
@@ -30,18 +30,17 @@ export class DatasetSetupRequiredError extends Error {
 @Injectable()
 export class DifyDatasetMappingService {
   private readonly logger = new Logger(DifyDatasetMappingService.name);
-  private readonly cfg: DifyConfig;
-  private readonly lmStudioModel: string;
   /** Dataset ids confirmed to exist this process run — avoids re-verifying every sync. */
   private readonly verifiedDatasetIds = new Set<string>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly dify: DifyClient,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
-    this.lmStudioModel = config.getOrThrow<LmStudioConfig>('lmStudio').embeddingModel;
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   private datasetNameFor(input: ResolveMappingInput, group: DifyFolderGroup): string {
@@ -135,7 +134,7 @@ export class DifyDatasetMappingService {
         // Record which embedding provider/model built this dataset — helps diagnose
         // a local(small-dim) vs server(4096) mismatch if a mapping is reused.
         embeddingProvider: 'lmstudio',
-        embeddingModel: this.lmStudioModel,
+        embeddingModel: this.settings.lmStudio().embeddingModel,
       },
     });
   }

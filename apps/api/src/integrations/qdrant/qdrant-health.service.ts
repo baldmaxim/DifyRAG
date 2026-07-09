@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { QdrantConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 import type { HealthResult } from '../health.types';
 import { QdrantReadonlyClient } from './qdrant-readonly.client';
 
 @Injectable()
 export class QdrantHealthService {
-  private readonly cfg: QdrantConfig;
-
   constructor(
     private readonly client: QdrantReadonlyClient,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<QdrantConfig>('qdrant');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): QdrantConfig {
+    return this.settings.qdrant();
   }
 
   async check(): Promise<HealthResult> {

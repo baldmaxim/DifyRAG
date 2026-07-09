@@ -1,15 +1,15 @@
-import type { ConfigService } from '@nestjs/config';
 import { describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../common/prisma/prisma.service';
 import type { DifyAppService } from '../integrations/dify/dify-app.service';
 import type { DifySearchService } from '../integrations/dify/dify-search.service';
 import type { ActorContext } from '../common/types/actor-context';
+import type { SettingsService } from '../settings/settings.service';
 import type { DatasetResolverService } from './dataset-resolver.service';
 import { SearchService } from './search.service';
 
 const config = {
-  getOrThrow: () => ({ retrieveTopK: 10, retrieveScoreThreshold: 0.2 }),
-} as unknown as ConfigService;
+  dify: () => ({ retrieveTopK: 10, retrieveScoreThreshold: 0.2 }),
+} as unknown as SettingsService;
 
 const ctx: ActorContext = { actor: { actorType: 'user', actorUserId: 'u1' }, userId: 'u1' };
 

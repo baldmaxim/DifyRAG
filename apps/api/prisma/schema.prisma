@@ -530,3 +530,17 @@ model IntegrationHealthCheck {
   @@index([provider, checkedAt])
   @@map("integration_health_checks")
 }
+
+// ── App settings (UI-editable config; overrides env) ─────────
+
+model AppSetting {
+  key             String   @id
+  groupName       String   @map("group_name")
+  value           String
+  isSecret        Boolean  @default(false) @map("is_secret")
+  updatedByUserId String?  @map("updated_by_user_id") @db.Uuid
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([groupName])
+  @@map("app_settings")
+}

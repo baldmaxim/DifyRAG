@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { DifyConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 
 /**
  * Answer-mode via a Dify chat app (uses DIFY_APP_API_KEY). Answer generation
@@ -9,10 +9,11 @@ import type { DifyConfig } from '../../config/configuration';
 @Injectable()
 export class DifyAppService {
   private readonly logger = new Logger(DifyAppService.name);
-  private readonly cfg: DifyConfig;
 
-  constructor(config: ConfigService) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
+  constructor(private readonly settings: SettingsService) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   isConfigured(): boolean {

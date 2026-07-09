@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { DifyConfig } from '../../config/configuration';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { SettingsService } from '../../settings/settings.service';
 import { StorageService } from '../../storage/storage.service';
 import { DifyClient, DifyApiError } from './dify.client';
 import { DifyDatasetMappingService } from './dify-dataset-mapping.service';
@@ -11,16 +11,17 @@ import type { CreateDocumentByFileData, DifyDocumentStatusAction } from './dify.
 @Injectable()
 export class DifyDocumentSyncService {
   private readonly logger = new Logger(DifyDocumentSyncService.name);
-  private readonly cfg: DifyConfig;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly dify: DifyClient,
     private readonly datasetMapping: DifyDatasetMappingService,
     private readonly storage: StorageService,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<DifyConfig>('dify');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): DifyConfig {
+    return this.settings.dify();
   }
 
   private buildData(): CreateDocumentByFileData {

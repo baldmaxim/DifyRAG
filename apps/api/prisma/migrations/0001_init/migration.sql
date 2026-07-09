@@ -356,6 +356,18 @@ CREATE TABLE "integration_health_checks" (
     CONSTRAINT "integration_health_checks_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "app_settings" (
+    "key" TEXT NOT NULL,
+    "group_name" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "is_secret" BOOLEAN NOT NULL DEFAULT false,
+    "updated_by_user_id" UUID,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "app_settings_pkey" PRIMARY KEY ("key")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -445,6 +457,9 @@ CREATE INDEX "rag_search_logs_created_at_idx" ON "rag_search_logs"("created_at")
 
 -- CreateIndex
 CREATE INDEX "integration_health_checks_provider_checked_at_idx" ON "integration_health_checks"("provider", "checked_at");
+
+-- CreateIndex
+CREATE INDEX "app_settings_group_name_idx" ON "app_settings"("group_name");
 
 -- AddForeignKey
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

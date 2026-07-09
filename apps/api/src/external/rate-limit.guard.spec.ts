@@ -1,12 +1,12 @@
 import { HttpException } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
 import type { ExecutionContext } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
+import type { SettingsService } from '../settings/settings.service';
 import { RateLimitGuard } from './rate-limit.guard';
 
 const config = {
-  getOrThrow: () => ({ externalRateLimitPerMin: 2 }),
-} as unknown as ConfigService;
+  security: () => ({ externalRateLimitPerMin: 2 }),
+} as unknown as SettingsService;
 
 function ctxForKey(id: string): ExecutionContext {
   return {

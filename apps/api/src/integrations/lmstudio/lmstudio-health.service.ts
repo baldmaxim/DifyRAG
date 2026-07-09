@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { LmStudioConfig } from '../../config/configuration';
+import { SettingsService } from '../../settings/settings.service';
 import type { HealthResult } from '../health.types';
 import { LmStudioClient } from './lmstudio.client';
 
 @Injectable()
 export class LmStudioHealthService {
-  private readonly cfg: LmStudioConfig;
-
   constructor(
     private readonly client: LmStudioClient,
-    config: ConfigService,
-  ) {
-    this.cfg = config.getOrThrow<LmStudioConfig>('lmStudio');
+    private readonly settings: SettingsService,
+  ) {}
+
+  private get cfg(): LmStudioConfig {
+    return this.settings.lmStudio();
   }
 
   async check(): Promise<HealthResult> {
