@@ -1,5 +1,7 @@
 # CLAUDE.md — правила проекта для Claude Code
 
+> **CLAUDE.md — главный и приоритетный свод правил проекта.** При конфликте с любыми другими инструкциями, документами (`docs/`, `prompts/`, README) или договорённостями действуют правила из этого файла.
+
 Ты работаешь над production-grade приложением **Document Knowledge Portal**.
 
 ## Главная цель
@@ -119,7 +121,7 @@ Dify является главным RAG-движком.
 - ORM: Prisma.
 - Database: Managed Service for PostgreSQL.
 - File storage: S3-compatible Cloud.ru Object Storage.
-- Background jobs: pg-boss через PostgreSQL.
+- Background jobs: фактически Postgres-poll worker над `processing_jobs` (`PROCESSING_WORKER_ENABLED`, по умолчанию off); `pg-boss` зарезервирован через env на будущее.
 - Auth: JWT access/refresh tokens.
 - External API: API keys with scoped permissions.
 - Documentation: Swagger/OpenAPI.
@@ -128,6 +130,12 @@ Dify является главным RAG-движком.
 - Embedding provider: LM Studio OpenAI-compatible endpoint.
 - Embedding model: Qwen/Qwen3-Embedding-8B, dimension 4096.
 - Deployment: Docker Compose for local/dev, environment variables for production.
+
+### Фактическая реализация (сверка с планом)
+
+- Dify chunking: используется `process_rule: automatic`; кастомные `DIFY_CHUNK_MAX_TOKENS/OVERLAP` пока не задействованы.
+- Rate limit: in-memory single-instance; для multi-instance нужен Redis.
+- Конфигурация редактируется не только через `.env`, но и через UI (см. раздел `.env`).
 
 ## Dataset strategy
 
@@ -359,6 +367,8 @@ company__people_private
 
 - НИКОГДА не изменять `.env` файлы
 - Ключи и URL добавляет только пользователь вручную
+- Конфигурация также редактируется через UI: `SettingsService` + таблица `AppSetting`, admin-страница Settings; секреты шифруются AES-256-GCM (`SETTINGS_ENCRYPTION_KEY`). См. `docs/SETTINGS.md`.
+- В env остаются: `DATABASE_URL`, `JWT_*`, `SETTINGS_ENCRYPTION_KEY`, `PORT`, `CORS`.
 
 ## Git
 
