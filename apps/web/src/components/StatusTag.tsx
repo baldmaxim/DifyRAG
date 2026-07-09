@@ -1,34 +1,16 @@
+import { SyncOutlined } from '@ant-design/icons';
 import { Tag } from 'antd';
+import { DKP_STATUS } from '../dkp-theme';
 
-const DOCUMENT_STATUS_COLORS: Record<string, string> = {
-  draft: 'default',
-  active: 'blue',
-  uploading: 'processing',
-  stored: 'cyan',
-  queued: 'gold',
-  processing: 'processing',
-  indexed: 'green',
-  error: 'red',
-  deleted: 'default',
-};
+type StatusMeta = { label: string; color: string; live?: boolean };
 
-const JOB_STATUS_COLORS: Record<string, string> = {
-  queued: 'gold',
-  running: 'processing',
-  success: 'green',
-  failed: 'red',
-  skipped: 'default',
-};
-
-const HEALTH_COLORS: Record<string, string> = {
-  ok: 'green',
-  degraded: 'orange',
-  down: 'red',
-  setup_required: 'gold',
-};
+const STATUS = DKP_STATUS as Record<string, StatusMeta>;
 
 export function StatusTag({ status }: { status: string }): React.ReactElement {
-  const color =
-    DOCUMENT_STATUS_COLORS[status] ?? JOB_STATUS_COLORS[status] ?? HEALTH_COLORS[status] ?? 'default';
-  return <Tag color={color}>{status}</Tag>;
+  const meta: StatusMeta = STATUS[status] ?? { label: status, color: 'default' };
+  return (
+    <Tag color={meta.color} icon={meta.live ? <SyncOutlined spin /> : undefined}>
+      {meta.label}
+    </Tag>
+  );
 }

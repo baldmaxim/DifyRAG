@@ -2,6 +2,8 @@ import {
   ApiOutlined,
   AppstoreOutlined,
   AuditOutlined,
+  BulbFilled,
+  BulbOutlined,
   CloudServerOutlined,
   DashboardOutlined,
   DatabaseOutlined,
@@ -13,11 +15,12 @@ import {
   TeamOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
-import { Dropdown, Layout, Menu, Space, Typography } from 'antd';
+import { Button, Dropdown, Layout, Menu, Space, Tooltip, Typography } from 'antd';
 import { useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/endpoints';
 import { useAuthStore } from '../stores/auth.store';
+import { useThemeStore } from '../stores/theme.store';
 
 const { Header, Sider, Content } = Layout;
 
@@ -41,6 +44,8 @@ export function AppLayout(): React.ReactElement {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const refreshToken = useAuthStore((s) => s.refreshToken);
+  const mode = useThemeStore((s) => s.mode);
+  const toggleTheme = useThemeStore((s) => s.toggle);
 
   const selectedKey = useMemo(() => {
     const match = MENU.find((m) => location.pathname.startsWith(m.key));
@@ -71,17 +76,27 @@ export function AppLayout(): React.ReactElement {
         />
       </Sider>
       <Layout>
-        <Header style={{ background: '#fff', display: 'flex', justifyContent: 'flex-end', paddingInline: 24 }}>
-          <Dropdown
-            menu={{
-              items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', onClick: onLogout }],
-            }}
-          >
-            <Space style={{ cursor: 'pointer' }}>
-              <Typography.Text strong>{user?.fullName ?? user?.email ?? 'Пользователь'}</Typography.Text>
-              <Typography.Text type="secondary">({user?.role})</Typography.Text>
-            </Space>
-          </Dropdown>
+        <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <Space size="middle">
+            <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>
+              <Button
+                type="text"
+                aria-label="Переключить тему"
+                icon={mode === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+                onClick={toggleTheme}
+              />
+            </Tooltip>
+            <Dropdown
+              menu={{
+                items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', onClick: onLogout }],
+              }}
+            >
+              <Space style={{ cursor: 'pointer' }}>
+                <Typography.Text strong>{user?.fullName ?? user?.email ?? 'Пользователь'}</Typography.Text>
+                <Typography.Text type="secondary">({user?.role})</Typography.Text>
+              </Space>
+            </Dropdown>
+          </Space>
         </Header>
         <Content style={{ margin: 24 }}>
           <Outlet />

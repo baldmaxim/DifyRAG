@@ -1,6 +1,6 @@
 :root {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
 }
 
 * {
@@ -13,4 +13,12 @@ body,
   margin: 0;
   padding: 0;
   height: 100%;
+}
+
+/* Tabular figures for numeric content (counts, sizes, statistics) */
+.num,
+.ant-statistic-content,
+.ant-table-cell .num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
