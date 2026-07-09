@@ -11,9 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Document, DocumentVersion } from '@prisma/client';
-import { UserRole } from '@dkp/shared';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Roles } from '../common/decorators/roles.decorator';
 import { userContext } from '../common/types/actor-context';
 import type { AuthenticatedRequest, AuthenticatedUser } from '../common/types/authenticated-request';
 import { DocumentsService, type UploadUrlResult } from './documents.service';
@@ -45,7 +43,6 @@ export class DocumentsController {
   }
 
   @Post()
-  @Roles(UserRole.Editor, UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   create(
     @Body() dto: CreateDocumentDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -55,7 +52,6 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.Editor, UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateDocumentDto,
@@ -66,7 +62,6 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   softDelete(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -76,7 +71,6 @@ export class DocumentsController {
   }
 
   @Post(':id/restore')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   restore(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -86,7 +80,6 @@ export class DocumentsController {
   }
 
   @Post(':id/upload-url')
-  @Roles(UserRole.Editor, UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   uploadUrl(
     @Param('id') id: string,
     @Body() dto: UploadUrlDto,
@@ -97,7 +90,6 @@ export class DocumentsController {
   }
 
   @Post(':id/commit-upload')
-  @Roles(UserRole.Editor, UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   commitUpload(
     @Param('id') id: string,
     @Body() dto: CommitUploadDto,
@@ -122,7 +114,6 @@ export class DocumentsController {
   }
 
   @Post(':id/versions/:versionId/make-current')
-  @Roles(UserRole.Editor, UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   makeCurrent(
     @Param('id') id: string,
     @Param('versionId') versionId: string,
@@ -133,7 +124,6 @@ export class DocumentsController {
   }
 
   @Post(':id/reindex')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   reindex(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,

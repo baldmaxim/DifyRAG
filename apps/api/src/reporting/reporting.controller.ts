@@ -17,7 +17,7 @@ export class ReportingController {
   }
 
   @Get('audit-logs')
-  @Roles(UserRole.Admin, UserRole.SuperAdmin)
+  @Roles(UserRole.Admin)
   auditLogs(
     @Query('action') action?: string,
     @Query('resourceType') resourceType?: string,
@@ -26,7 +26,6 @@ export class ReportingController {
   }
 
   @Get('dify-datasets')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   difyDatasets(): Promise<unknown[]> {
     return this.reporting.listDifyDatasets();
   }

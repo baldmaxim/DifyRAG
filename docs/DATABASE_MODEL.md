@@ -33,7 +33,7 @@
 
 ## Enums (в `@dkp/shared`)
 
-`UserRole` (super_admin/admin/manager/editor/viewer), `Scope`, `DocumentStatus`,
+`UserRole` (admin/user), `Scope`, `DocumentStatus`,
 `DifyIndexingStatus` (pending…completed/error/archived/disabled), `Confidentiality`,
 `DocumentTypeCode`, `ProcessingJobType`, `ProcessingJobStatus`, `ApiKeyScope`.
 

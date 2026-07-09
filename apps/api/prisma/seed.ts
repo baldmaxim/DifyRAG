@@ -62,11 +62,11 @@ async function main(): Promise<void> {
       email,
       passwordHash: await argonHash(password),
       fullName,
-      role: 'super_admin',
+      role: 'admin',
       status: 'active',
     },
   });
-  console.log(`Seeded super admin: ${admin.email}`);
+  console.log(`Seeded admin: ${admin.email}`);
 
   for (const type of DOCUMENT_TYPES) {
     await prisma.documentType.upsert({

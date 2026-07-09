@@ -49,7 +49,7 @@ The API image runs `prisma migrate deploy` on start. To run manually:
 
 ```bash
 pnpm --filter @dkp/api exec prisma migrate deploy
-pnpm --filter @dkp/api seed   # creates super admin (SEED_ADMIN_*), doc types, departments
+pnpm --filter @dkp/api seed   # creates admin (SEED_ADMIN_*), doc types, departments
 ```
 
 ## 6. Verify

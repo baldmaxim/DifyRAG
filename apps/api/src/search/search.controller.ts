@@ -20,7 +20,7 @@ export class SearchController {
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: AuthenticatedRequest,
   ): Promise<SearchResponse> {
-    const includePrivate = user.role === UserRole.SuperAdmin || user.role === UserRole.Admin;
+    const includePrivate = user.role === UserRole.Admin;
     return this.search.search(dto, { ctx: userContext(user, req), includePrivate });
   }
 }

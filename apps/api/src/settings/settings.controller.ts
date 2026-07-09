@@ -18,7 +18,7 @@ const GROUP_TO_PROVIDER: Record<string, 'dify' | 'lmstudio' | 'qdrant' | 's3'> =
 
 @ApiTags('settings')
 @ApiBearerAuth('jwt')
-@Roles(UserRole.Admin, UserRole.SuperAdmin)
+@Roles(UserRole.Admin)
 @Controller('settings')
 export class SettingsController {
   constructor(

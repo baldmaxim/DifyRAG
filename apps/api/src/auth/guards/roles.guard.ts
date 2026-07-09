@@ -21,8 +21,8 @@ export class RolesGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('No authenticated user');
     }
-    // super_admin implicitly satisfies every role requirement.
-    if (user.role === UserRole.SuperAdmin || requiredRoles.includes(user.role)) {
+    // admin implicitly satisfies every role requirement.
+    if (user.role === UserRole.Admin || requiredRoles.includes(user.role)) {
       return true;
     }
     throw new ForbiddenException('Insufficient role');

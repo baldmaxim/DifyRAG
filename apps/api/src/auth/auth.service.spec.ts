@@ -10,7 +10,7 @@ async function buildUser(status: 'active' | 'disabled') {
     id: 'u1',
     email: 'admin@example.com',
     fullName: 'Admin',
-    role: 'super_admin',
+    role: 'admin',
     status,
     passwordHash: await hashSecret('password123'),
   };

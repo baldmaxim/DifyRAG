@@ -11,10 +11,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Project } from '@prisma/client';
-import { UserRole } from '@dkp/shared';
 import { AuditService } from '../common/audit/audit.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { Roles } from '../common/decorators/roles.decorator';
 import type { AuthenticatedRequest, AuthenticatedUser } from '../common/types/authenticated-request';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -40,7 +38,6 @@ export class ProjectsController {
   }
 
   @Post()
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   async create(
     @Body() dto: CreateProjectDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -60,7 +57,6 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
@@ -80,7 +76,6 @@ export class ProjectsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Manager, UserRole.Admin, UserRole.SuperAdmin)
   async archive(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,

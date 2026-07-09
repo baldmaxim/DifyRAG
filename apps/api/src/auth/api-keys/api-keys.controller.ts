@@ -10,7 +10,7 @@ import { CreateApiKeyDto } from './dto/create-api-key.dto';
 
 @ApiTags('api-keys')
 @ApiBearerAuth('jwt')
-@Roles(UserRole.Admin, UserRole.SuperAdmin)
+@Roles(UserRole.Admin)
 @Controller('api-keys')
 export class ApiKeysController {
   constructor(

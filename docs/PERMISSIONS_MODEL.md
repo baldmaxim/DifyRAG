@@ -4,26 +4,24 @@
 
 | Role | Capabilities |
 |---|---|
-| `super_admin` | Everything. |
-| `admin` | Integrations, API keys, users, all document operations. |
-| `manager` | Projects, documents, reindex, processing jobs, search. |
-| `editor` | Create/edit documents (upload, commit, make-current). |
-| `viewer` | Read + search allowed documents only. |
+| `admin` | Everything: settings, integrations, API keys, audit logs, private datasets, plus all content operations. |
+| `user` | All content: projects, documents (upload/edit/delete), folders, departments, reindex, processing, search. |
 
-`super_admin` implicitly satisfies every role requirement (RolesGuard).
+`admin` implicitly satisfies every role requirement (RolesGuard). New users default to `user`.
 
 ## Enforced by endpoint (examples)
 
-| Action | Minimum role |
+| Action | Required role |
 |---|---|
-| Create/update/archive project | manager |
-| Create folder | editor |
-| Delete folder | manager |
-| Create/update document, upload, commit | editor |
-| Delete (soft) / restore document | manager |
-| Reindex document | manager |
+| Create/update/archive project | user |
+| Create/update/delete folder | user |
+| Create/update/delete document, upload, commit, make-current | user |
+| Delete (soft) / restore document | user |
+| Reindex document, retry processing job | user |
+| Create/update/delete department | user |
+| App settings, integrations, Qdrant collections (diagnostics) | admin |
 | Manage API keys | admin |
-| Qdrant collections (diagnostics) | admin |
+| Audit logs | admin |
 | Search | any authenticated user |
 
 ## API key scopes (external systems)
@@ -36,7 +34,7 @@ is shown once at creation. Revoked/expired keys are rejected; `last_used_at` is 
 
 - `company__people_private` is a separate Dify dataset with restricted access.
 - Search **excludes** private datasets by default.
-- Internal search includes private datasets only for `admin`/`super_admin`.
+- Internal search includes private datasets only for `admin`.
 - External API search **never** includes private datasets.
 
 ## Auditing

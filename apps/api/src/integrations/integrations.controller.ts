@@ -42,7 +42,7 @@ export class IntegrationsController {
   }
 
   @Get('qdrant/collections')
-  @Roles(UserRole.Admin, UserRole.SuperAdmin)
+  @Roles(UserRole.Admin)
   qdrantCollections(): Promise<string[]> {
     return this.qdrantClient.listCollections();
   }

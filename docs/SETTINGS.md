@@ -1,6 +1,6 @@
 # UI-managed settings
 
-Most configuration is editable from the portal (**Настройки**, admin/super_admin only) and stored
+Most configuration is editable from the portal (**Настройки**, admin only) and stored
 in the database, **overriding `.env`**. Changes apply **immediately** (no restart). Secrets are
 encrypted at rest and are **never** returned to the frontend (write-only; the UI shows only
 "configured / not set").

@@ -14,11 +14,8 @@ datasource db {
 // ── Enums ────────────────────────────────────────────────────
 
 enum UserRole {
-  super_admin
   admin
-  manager
-  editor
-  viewer
+  user
 }
 
 enum UserStatus {
@@ -119,7 +116,7 @@ model User {
   email        String     @unique
   passwordHash String     @map("password_hash")
   fullName     String     @map("full_name")
-  role         UserRole   @default(viewer)
+  role         UserRole   @default(user)
   status       UserStatus @default(active)
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")

@@ -468,7 +468,7 @@ export class DocumentsService {
   /** Fallback owner for system-created documents (external API without a user). */
   private async systemUserId(): Promise<string> {
     const admin = await this.prisma.user.findFirst({
-      where: { role: 'super_admin' },
+      where: { role: 'admin' },
       orderBy: { createdAt: 'asc' },
     });
     if (!admin) {
