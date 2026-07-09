@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Col,
+  Descriptions,
   Divider,
   Form,
   Input,
@@ -17,7 +18,7 @@ import {
   Typography,
   theme as antdTheme,
 } from 'antd';
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { settingsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
@@ -90,6 +91,42 @@ function labelFor(group: string, f: MaskedSettingField): string {
   return LABELS[`${group}.${f.field}`] ?? f.label;
 }
 
+function splitFields(group: MaskedSettingGroup): { basic: MaskedSettingField[]; advanced: MaskedSettingField[] } {
+  const adv = ADVANCED[group.group] ?? new Set<string>();
+  return {
+    basic: group.fields.filter((f) => !adv.has(f.field)),
+    advanced: group.fields.filter((f) => adv.has(f.field)),
+  };
+}
+
+// ── Read-only view ────────────────────────────────────────
+function viewValue(f: MaskedSettingField): ReactNode {
+  if (f.secret) {
+    return f.configured ? <Tag color="green">Задано</Tag> : <Tag>Не задано</Tag>;
+  }
+  if (f.type === 'boolean') {
+    return f.value ? <Tag color="green">Да</Tag> : <Tag>Нет</Tag>;
+  }
+  const s = f.value == null || f.value === '' ? '—' : String(f.value);
+  return <span className={f.field.toLowerCase().includes('url') || f.field.includes('endpoint') ? 'mono' : undefined}>{s}</span>;
+}
+
+function ViewCard({ group, fields }: { group: string; fields: MaskedSettingField[] }): ReactElement {
+  return (
+    <Descriptions
+      bordered
+      size="small"
+      column={{ xs: 1, sm: 2 }}
+      items={fields.map((f) => ({
+        key: f.field,
+        label: labelFor(group, f),
+        children: viewValue(f),
+      }))}
+    />
+  );
+}
+
+// ── Edit form ─────────────────────────────────────────────
 function FieldItem({ group, f }: { group: string; f: MaskedSettingField }): ReactElement {
   const label = labelFor(group, f);
   if (f.type === 'boolean') {
@@ -108,11 +145,7 @@ function FieldItem({ group, f }: { group: string; f: MaskedSettingField }): Reac
   }
   if (f.secret) {
     return (
-      <Form.Item
-        name={f.field}
-        label={label}
-        extra={f.configured ? 'Задано. Пусто — не менять.' : 'Не задано.'}
-      >
+      <Form.Item name={f.field} label={label} extra={f.configured ? 'Задано. Пусто — не менять.' : 'Не задано.'}>
         <Input.Password placeholder={f.configured ? '••••••••' : ''} autoComplete="new-password" />
       </Form.Item>
     );
@@ -136,17 +169,16 @@ function fieldGrid(group: string, fields: MaskedSettingField[]): ReactElement {
   );
 }
 
-function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
+function GroupPanel({ group }: { group: MaskedSettingGroup }): ReactElement {
   const { token } = antdTheme.useToken();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [testResult, setTestResult] = useState<HealthResult | null>(null);
 
-  const advSet = ADVANCED[group.group] ?? new Set<string>();
-  const basicFields = group.fields.filter((f) => !advSet.has(f.field));
-  const advancedFields = group.fields.filter((f) => advSet.has(f.field));
+  const { basic, advanced } = splitFields(group);
 
   const initialValues: Record<string, unknown> = {};
   for (const f of group.fields) {
@@ -164,6 +196,7 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
     },
     onSuccess: () => {
       message.success('Сохранено');
+      setMode('view');
       void queryClient.invalidateQueries({ queryKey: ['settings'] });
       void queryClient.invalidateQueries({ queryKey: ['integrations-health'] });
     },
@@ -179,58 +212,86 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
     onError: (err) => message.error(apiErrorMessage(err)),
   });
 
-  return (
-    <div style={{ maxWidth: 640 }}>
-      <div style={{ marginBottom: 16 }}>
+  const header = (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+      <div>
         <Typography.Text strong style={{ fontSize: 15 }}>
           {GROUP_TITLE[group.group] ?? group.label}
         </Typography.Text>
-        <div style={{ color: token.colorTextSecondary, fontSize: 13 }}>
-          {GROUP_DESC[group.group]}
-        </div>
+        <div style={{ color: token.colorTextSecondary, fontSize: 13 }}>{GROUP_DESC[group.group]}</div>
       </div>
-
-      <Form form={form} layout="vertical" initialValues={initialValues} onFinish={(v) => saveMutation.mutate(v)}>
-        {fieldGrid(group.group, basicFields)}
-
-        {advancedFields.length > 0 && (
-          <>
-            <Divider style={{ margin: '4px 0 16px' }} />
-            <Space style={{ marginBottom: showAdvanced ? 12 : 0 }}>
-              <Switch size="small" checked={showAdvanced} onChange={setShowAdvanced} />
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                Расширенные настройки
-              </Typography.Text>
-            </Space>
-            {showAdvanced && fieldGrid(group.group, advancedFields)}
-          </>
-        )}
-
-        {testResult && (
-          <Alert
-            style={{ margin: '12px 0' }}
-            type={testResult.status === 'ok' ? 'success' : testResult.status === 'degraded' ? 'warning' : 'error'}
-            message={
-              <Space>
-                Проверка: <Tag>{testResult.status}</Tag>
-                {testResult.latencyMs != null && <span className="num">{testResult.latencyMs} мс</span>}
-              </Space>
-            }
-          />
-        )}
-
-        <Divider style={{ margin: '16px 0' }} />
+      {mode === 'view' && (
         <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>
-            Сохранить
-          </Button>
           {TESTABLE.has(group.group) && (
             <Button loading={testMutation.isPending} onClick={() => testMutation.mutate()}>
-              Проверить соединение
+              Проверить
             </Button>
           )}
+          <Button type="primary" onClick={() => setMode('edit')}>
+            Редактировать
+          </Button>
         </Space>
-      </Form>
+      )}
+    </div>
+  );
+
+  const testAlert = testResult && (
+    <Alert
+      style={{ margin: '0 0 16px' }}
+      type={testResult.status === 'ok' ? 'success' : testResult.status === 'degraded' ? 'warning' : 'error'}
+      message={
+        <Space>
+          Проверка соединения: <Tag>{testResult.status}</Tag>
+          {testResult.latencyMs != null && <span className="num">{testResult.latencyMs} мс</span>}
+        </Space>
+      }
+    />
+  );
+
+  return (
+    <div style={{ maxWidth: 720 }}>
+      {header}
+      {testAlert}
+
+      {mode === 'view' ? (
+        <>
+          <ViewCard group={group.group} fields={basic} />
+          {advanced.length > 0 && (
+            <>
+              <Space style={{ margin: '14px 0' }}>
+                <Switch size="small" checked={showAdvanced} onChange={setShowAdvanced} />
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  Расширенные настройки
+                </Typography.Text>
+              </Space>
+              {showAdvanced && <ViewCard group={group.group} fields={advanced} />}
+            </>
+          )}
+        </>
+      ) : (
+        <Form form={form} layout="vertical" initialValues={initialValues} onFinish={(v) => saveMutation.mutate(v)}>
+          {fieldGrid(group.group, basic)}
+          {advanced.length > 0 && (
+            <>
+              <Divider style={{ margin: '4px 0 16px' }} />
+              <Space style={{ marginBottom: showAdvanced ? 12 : 0 }}>
+                <Switch size="small" checked={showAdvanced} onChange={setShowAdvanced} />
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  Расширенные настройки
+                </Typography.Text>
+              </Space>
+              {showAdvanced && fieldGrid(group.group, advanced)}
+            </>
+          )}
+          <Divider style={{ margin: '16px 0' }} />
+          <Space>
+            <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>
+              Сохранить
+            </Button>
+            <Button onClick={() => setMode('view')}>Отмена</Button>
+          </Space>
+        </Form>
+      )}
     </div>
   );
 }
@@ -259,7 +320,7 @@ export function SettingsPage(): ReactElement {
               {GROUP_TITLE[g.group] ?? g.label}
             </Space>
           ),
-          children: <GroupForm group={g} />,
+          children: <GroupPanel group={g} />,
         }))}
       />
     </>
