@@ -13,18 +13,26 @@ import {
   Space,
   Switch,
   Tabs,
-  Tag,
   Typography,
   theme as antdTheme,
 } from 'antd';
 import { useState, type ReactElement } from 'react';
 import { apiErrorMessage } from '../api/client';
-import { settingsApi } from '../api/endpoints';
+import { integrationsApi, settingsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
 import { PageHead } from '../components/PageHead';
+import { StatusTag } from '../components/StatusTag';
 import type { HealthResult, MaskedSettingField, MaskedSettingGroup } from '../types';
 
 const TESTABLE = new Set(['s3', 'dify', 'lmStudio', 'qdrant']);
+
+/** Settings group -> integrations health provider name. */
+const GROUP_PROVIDER: Record<string, HealthResult['provider']> = {
+  s3: 's3',
+  dify: 'dify',
+  lmStudio: 'lmstudio',
+  qdrant: 'qdrant',
+};
 
 const GROUP_ICON: Record<string, ReactElement> = {
   s3: Icons.cloud,
@@ -90,6 +98,14 @@ function labelFor(group: string, f: MaskedSettingField): string {
   return LABELS[`${group}.${f.field}`] ?? f.label;
 }
 
+function statusHint(h: HealthResult): string {
+  const d = h.details as Record<string, unknown>;
+  if (h.status === 'setup_required') return 'Не настроено — заполните поля и нажмите «Сохранить».';
+  if (typeof d.error === 'string') return String(d.error);
+  if (h.status === 'degraded') return 'Работает с замечаниями (детали — в разделе «Интеграции»).';
+  return 'Соединение недоступно.';
+}
+
 function FieldItem({ group, f }: { group: string; f: MaskedSettingField }): ReactElement {
   const label = labelFor(group, f);
   if (f.type === 'boolean') {
@@ -132,14 +148,15 @@ function fieldGrid(group: string, fields: MaskedSettingField[]): ReactElement {
   );
 }
 
-function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
+function GroupForm({ group, health }: { group: MaskedSettingGroup; health?: HealthResult }): ReactElement {
   const { token } = antdTheme.useToken();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [testResult, setTestResult] = useState<HealthResult | null>(null);
+  const [live, setLive] = useState<HealthResult | null>(null);
+  const shownHealth = live ?? health;
 
   const advSet = ADVANCED[group.group] ?? new Set<string>();
   const basicFields = group.fields.filter((f) => !advSet.has(f.field));
@@ -172,7 +189,10 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
     mutationFn: () => settingsApi.test(group.group),
     onSuccess: (res) => {
       if ('supported' in res) message.info('Для этой группы нет проверки соединения');
-      else setTestResult(res);
+      else {
+        setLive(res);
+        void queryClient.invalidateQueries({ queryKey: ['integrations-health'] });
+      }
     },
     onError: (err) => message.error(apiErrorMessage(err)),
   });
@@ -186,9 +206,17 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
     <div style={{ maxWidth: 720 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
         <div>
-          <Typography.Text strong style={{ fontSize: 15 }}>
-            {GROUP_TITLE[group.group] ?? group.label}
-          </Typography.Text>
+          <Space size={8} align="center">
+            <Typography.Text strong style={{ fontSize: 15 }}>
+              {GROUP_TITLE[group.group] ?? group.label}
+            </Typography.Text>
+            {shownHealth && <StatusTag status={shownHealth.status} />}
+            {shownHealth?.latencyMs != null && (
+              <Typography.Text type="secondary" className="num" style={{ fontSize: 12 }}>
+                {shownHealth.latencyMs} мс
+              </Typography.Text>
+            )}
+          </Space>
           <div style={{ color: token.colorTextSecondary, fontSize: 13 }}>{GROUP_DESC[group.group]}</div>
         </div>
         <Space>
@@ -212,16 +240,11 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
         </Space>
       </div>
 
-      {testResult && (
+      {shownHealth && shownHealth.status !== 'ok' && (
         <Alert
           style={{ margin: '0 0 16px' }}
-          type={testResult.status === 'ok' ? 'success' : testResult.status === 'degraded' ? 'warning' : 'error'}
-          message={
-            <Space>
-              Проверка соединения: <Tag>{testResult.status}</Tag>
-              {testResult.latencyMs != null && <span className="num">{testResult.latencyMs} мс</span>}
-            </Space>
-          }
+          type={shownHealth.status === 'degraded' ? 'warning' : 'error'}
+          message={statusHint(shownHealth)}
         />
       )}
 
@@ -253,11 +276,18 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): ReactElement {
 
 export function SettingsPage(): ReactElement {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['settings'], queryFn: settingsApi.list });
+  const { data: health } = useQuery({ queryKey: ['integrations-health'], queryFn: integrationsApi.health });
 
   if (isLoading) return <Skeleton active />;
   if (isError) {
     return <Alert type="error" message={apiErrorMessage(error, 'Нет доступа к настройкам (нужна роль admin)')} />;
   }
+
+  const healthByProvider = new Map((health ?? []).map((h) => [h.provider, h]));
+  const healthFor = (group: string): HealthResult | undefined => {
+    const provider = GROUP_PROVIDER[group];
+    return provider ? healthByProvider.get(provider) : undefined;
+  };
 
   return (
     <>
@@ -267,16 +297,20 @@ export function SettingsPage(): ReactElement {
       />
       <Tabs
         tabPosition="left"
-        items={(data ?? []).map((g) => ({
-          key: g.group,
-          label: (
-            <Space size={8}>
-              {GROUP_ICON[g.group]}
-              {GROUP_TITLE[g.group] ?? g.label}
-            </Space>
-          ),
-          children: <GroupForm group={g} />,
-        }))}
+        items={(data ?? []).map((g) => {
+          const h = healthFor(g.group);
+          return {
+            key: g.group,
+            label: (
+              <Space size={8}>
+                {GROUP_ICON[g.group]}
+                {GROUP_TITLE[g.group] ?? g.label}
+                {h && <StatusTag status={h.status} />}
+              </Space>
+            ),
+            children: <GroupForm group={g} health={h} />,
+          };
+        })}
       />
     </>
   );
