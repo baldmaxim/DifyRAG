@@ -1,5 +1,8 @@
 # CLAUDE.md — правила проекта для Claude Code
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+
 > **CLAUDE.md — главный и приоритетный свод правил проекта.** При конфликте с любыми другими инструкциями, документами (`docs/`, `prompts/`, README) или договорённостями действуют правила из этого файла.
 
 Ты работаешь над production-grade приложением **Document Knowledge Portal**.
@@ -354,6 +357,44 @@ company__people_private
 4. Запусти проверки.
 5. Исправь ошибки.
 6. Кратко опиши, что изменено.
+
+## Общие правила
+
+- TypeScript для всего кода, строгая типизация, избегать `any`
+- Функциональные компоненты (FC) с React hooks
+- Arrow functions, деструктуризация пропсов, `export const`
+- Один компонент на файл, максимум 500 строк — иначе дели на части
+- MVP: минимально работающая версия, без фич "на будущее"
+- **Модалки**: закрытие по клику на overlay — только через хук [`useOverlayDismiss`](fot-app/src/hooks/useOverlayDismiss.ts). Модалка НЕ должна закрываться, если ЛКМ зажата внутри (выделение текста, drag-to-select) и отпущена за границами. Простой `onClick={onClose}` на overlay запрещён.
+- **Ответы на русском**: все ответы и объяснения пиши на русском языке. Код-примеры могут быть на английском (if, function, const и т.д.), но описание, комментарии и коммиты — только русский.
+
+## Адаптивность (обязательно)
+
+Все UI компоненты адаптированы под:
+- **iPhone 15 Pro Max** (430 × 932 px)
+- **iPhone 12** (390 × 844 px)
+- **iPad** (768 × 1024 px и больше)
+
+CSS media queries для всех целевых устройств.
+
+### Android-смартфоны
+
+- Брейкпоинты: 360px (Galaxy A0x/старые), 360–412px (основной Android-диапазон).
+- Высоты: только `100dvh`/`svh`, не `100vh` (адрес-бар Chrome съедает vh).
+- `env(safe-area-inset-*)` + `viewport-fit=cover` для шторок/жестов.
+- Тап-цели ≥ 44×44px (рекоменд. 48px Material).
+- `font-size` инпутов ≥ 16px (нет авто-зума и на Android-Chrome).
+- Нет горизонтального скролла на 360px; `overflow-wrap` вместо `word-break`.
+- Fixed-панели/модалки: высота через `dvh`, ресайз — `window.visualViewport`.
+- Проверять на Pixel (412px) и Galaxy A (360px) в DevTools.
+
+## Документация
+- `docs/` — 2FA, шифрование, миграции БД, Sigur API, бэклог
+- `docs/migrations/` — SQL-миграции (нумерованы 001–...), применяются вручную через `psql` на сервере (авто-миграций нет)
+- `scripts/` — `deploy-frontend.sh`, `deploy-backend.sh`, `deploy-both.sh` (атомарные деплои на прод; билд локально + tar-pipe)
+
+
+
 
 ## КРАТКОСТЬ
 
