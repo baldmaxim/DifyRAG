@@ -1,10 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App as AntApp, Button, Card, Drawer, Form, Input, Space, Table, Tag } from 'antd';
+import { App as AntApp, Alert, Button, Card, Drawer, Empty, Form, Input, Skeleton, Space, Table, Typography } from 'antd';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { projectsApi } from '../api/endpoints';
+import { Icons } from '../components/icons';
+import { PageHead } from '../components/PageHead';
+import { RowActions } from '../components/RowActions';
+import { StatusTag } from '../components/StatusTag';
 import type { Project } from '../types';
+
+const { Text } = Typography;
 
 export function ProjectsPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -14,7 +20,7 @@ export function ProjectsPage(): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['projects', search],
     queryFn: () => projectsApi.list(search || undefined),
   });
@@ -31,44 +37,108 @@ export function ProjectsPage(): React.ReactElement {
   });
 
   return (
-    <Card
-      title="Проекты"
-      extra={
-        <Button type="primary" onClick={() => setOpen(true)}>
-          Новый проект
-        </Button>
-      }
-    >
+    <>
+      <PageHead
+        title="Проекты"
+        desc="Объекты строительства и их хранилища документов"
+        extra={
+          <Button type="primary" icon={Icons.plus} onClick={() => setOpen(true)}>
+            Новый проект
+          </Button>
+        }
+      />
       <Input.Search
         placeholder="Поиск по коду / названию / заказчику"
         allowClear
         onSearch={setSearch}
         style={{ maxWidth: 360, marginBottom: 16 }}
       />
-      <Table<Project>
-        rowKey="id"
-        loading={isLoading}
-        dataSource={data ?? []}
-        onRow={(record) => ({ onClick: () => navigate(`/projects/${record.id}`) })}
-        columns={[
-          { title: 'Код', dataIndex: 'code' },
-          { title: 'Название', dataIndex: 'name' },
-          { title: 'Заказчик', dataIndex: 'customerName' },
-          {
-            title: 'Статус',
-            dataIndex: 'status',
-            render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s}</Tag>,
-          },
-        ]}
-      />
+      <Card size="small" styles={{ body: { padding: isError ? 16 : 0 } }}>
+        {isLoading ? (
+          <div style={{ padding: 16 }}>
+            <Skeleton active paragraph={{ rows: 6 }} />
+          </div>
+        ) : isError ? (
+          <Alert
+            type="error"
+            showIcon
+            message="Не удалось загрузить проекты"
+            description={apiErrorMessage(error)}
+            action={
+              <Button size="small" danger onClick={() => void refetch()}>
+                Повторить
+              </Button>
+            }
+          />
+        ) : (data ?? []).length === 0 ? (
+          <div style={{ padding: 24 }}>
+            <Empty description="Проектов пока нет — создайте первый объект">
+              <Button type="primary" icon={Icons.plus} onClick={() => setOpen(true)}>
+                Создать проект
+              </Button>
+            </Empty>
+          </div>
+        ) : (
+          <Table<Project>
+            rowKey="id"
+            dataSource={data ?? []}
+            pagination={{ pageSize: 10, size: 'small', showTotal: (t) => `Всего: ${t}` }}
+            onRow={(record) => ({ onClick: () => navigate(`/projects/${record.id}`), style: { cursor: 'pointer' } })}
+            columns={[
+              { title: 'Код', dataIndex: 'code', width: 96, render: (v: string) => <Text className="mono">{v}</Text> },
+              {
+                title: 'Название',
+                dataIndex: 'name',
+                render: (v: string) => (
+                  <Text strong style={{ fontSize: 13.5 }}>
+                    {v}
+                  </Text>
+                ),
+              },
+              { title: 'Заказчик', dataIndex: 'customerName', render: (v?: string) => v ?? '—' },
+              { title: 'Статус', dataIndex: 'status', width: 130, render: (s: string) => <StatusTag status={s} /> },
+              {
+                title: '',
+                key: 'a',
+                width: 90,
+                render: (_, r) => (
+                  <RowActions
+                    items={[
+                      { icon: 'eye', tip: 'Открыть', onClick: () => navigate(`/projects/${r.id}`) },
+                    ]}
+                  />
+                ),
+              },
+            ]}
+          />
+        )}
+      </Card>
 
-      <Drawer title="Новый проект" open={open} onClose={() => setOpen(false)} width={420}>
-        <Form form={form} layout="vertical" onFinish={(v) => createMutation.mutate(v)}>
-          <Form.Item name="code" label="Код" rules={[{ required: true, pattern: /^[a-z0-9-]+$/ }]}>
-            <Input placeholder="zilart-lot-31" />
+      <Drawer
+        title="Новый проект"
+        open={open}
+        onClose={() => setOpen(false)}
+        width={440}
+        footer={
+          <Space style={{ float: 'right' }}>
+            <Button onClick={() => setOpen(false)}>Отмена</Button>
+            <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>
+              Создать проект
+            </Button>
+          </Space>
+        }
+      >
+        <Form form={form} layout="vertical" requiredMark="optional" onFinish={(v) => createMutation.mutate(v)}>
+          <Form.Item
+            name="code"
+            label="Код проекта"
+            tooltip="Латиницей. Используется в именах Dify-датасетов: project_{код}__раздел"
+            rules={[{ required: true, pattern: /^[a-z0-9-]+$/, message: 'Латиница, цифры, дефис' }]}
+          >
+            <Input placeholder="zilart-lot-31" className="mono" />
           </Form.Item>
           <Form.Item name="name" label="Название" rules={[{ required: true }]}>
-            <Input />
+            <Input placeholder="ЖК «Туран»" />
           </Form.Item>
           <Form.Item name="customerName" label="Заказчик">
             <Input />
@@ -76,14 +146,13 @@ export function ProjectsPage(): React.ReactElement {
           <Form.Item name="address" label="Адрес">
             <Input />
           </Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={createMutation.isPending}>
-              Создать
-            </Button>
-            <Button onClick={() => setOpen(false)}>Отмена</Button>
-          </Space>
+          <Alert
+            type="info"
+            showIcon
+            message="Структура папок 00–99 будет создана автоматически по стандартному шаблону."
+          />
         </Form>
       </Drawer>
-    </Card>
+    </>
   );
 }

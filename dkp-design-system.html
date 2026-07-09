@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DKP — Design System & UI Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap&subset=cyrillic" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/antd/5.27.4/antd.min.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (!window.antd || !window.React) {
+      document.getElementById('root').innerHTML =
+        '<div style="font-family:Inter,Arial,sans-serif;padding:48px;max-width:560px;margin:0 auto;line-height:1.6">' +
+        '<h2 style="margin:0 0 8px">Не удалось загрузить библиотеки</h2>' +
+        '<p>Страница подтягивает React и Ant Design с cdnjs.cloudflare.com. Проверьте подключение к интернету и доступность CDN, затем обновите страницу.</p></div>';
+    }
+  });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root { color-scheme: light; }
+  html, body, #root { height: 100%; margin: 0; }
+  body { font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
+  * { box-sizing: border-box; }
+  .num, .ant-statistic-content, td.col-num, .mono { font-variant-numeric: tabular-nums; }
+  .mono { font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace; font-size: 12.5px; }
+
+  /* ---- App shell ---- */
+  .dkp-logo { display:flex; align-items:center; gap:10px; padding:16px 20px 14px; }
+  .dkp-logo-mark { width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+    background:linear-gradient(135deg,#3D6BFF 0%,#2843C8 100%); flex:0 0 auto; }
+  .dkp-logo-text { color:#EDF1F9; font-weight:700; font-size:16px; letter-spacing:.4px; line-height:1.1; }
+  .dkp-logo-sub { color:#7686A0; font-size:10.5px; font-weight:500; letter-spacing:.6px; text-transform:uppercase; }
+
+  .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .page-title { font-size:20px; font-weight:600; line-height:28px; margin:0; }
+  .page-desc { font-size:13px; margin-top:2px; }
+
+  /* ---- Pipeline strip (dashboard signature) ---- */
+  .pipe { display:flex; align-items:stretch; gap:0; overflow-x:auto; }
+  .pipe-stage { flex:1 1 0; min-width:96px; position:relative; padding:10px 14px 10px 20px; }
+  .pipe-stage:not(:last-child)::after { content:''; position:absolute; right:-9px; top:50%; width:18px; height:18px;
+    transform:translateY(-50%) rotate(45deg); border-top:1px solid var(--pipe-border); border-right:1px solid var(--pipe-border);
+    background:inherit; z-index:1; }
+  .pipe-count { font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1.15; }
+  .pipe-label { font-size:11.5px; font-weight:500; letter-spacing:.2px; }
+
+  /* ---- Login ---- */
+  .login-wrap { min-height:100vh; display:grid; grid-template-columns: 1.1fr 1fr; }
+  .login-brand { position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; padding:48px; color:#E8EDF8; background:#101828; }
+  .login-grid { position:absolute; inset:0; opacity:.5;
+    background-image:linear-gradient(rgba(102,134,214,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(102,134,214,.14) 1px, transparent 1px);
+    background-size:36px 36px; }
+  .login-grid::after { content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at 30% 20%, rgba(61,107,255,.22), transparent 55%); }
+  .login-form-col { display:flex; align-items:center; justify-content:center; padding:40px; }
+  @media (max-width: 900px){ .login-wrap { grid-template-columns:1fr; } .login-brand{ display:none; } }
+
+  /* ---- JSON / diff viewer ---- */
+  .json-view { border-radius:8px; padding:12px 14px; font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.65; overflow:auto; }
+  .jk { opacity:.68; } .js { } .jn { } .diff-del { text-decoration:line-through; opacity:.55; }
+  .diff-add-row { border-radius:4px; padding:0 4px; margin:0 -4px; display:inline-block; }
+
+  /* ---- Swatches ---- */
+  .swatch-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .swatch { width:120px; border-radius:8px; overflow:hidden; border:1px solid var(--sw-border); }
+  .swatch-c { height:44px; } .swatch-t { padding:6px 8px; font-size:11px; line-height:1.5; }
+
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { border-radius:6px; background:rgba(128,140,160,.35); border:2px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-track { background:transparent; }
+
+  .ant-table-tbody > tr > td { transition: background .16s ease; }
+  .kpi-card .ant-statistic-title { font-size:12.5px; font-weight:500; letter-spacing:.1px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+const { useState, useMemo } = React;
+const {
+  ConfigProvider, theme: antdTheme, Layout, Menu, Breadcrumb, Dropdown, Avatar, Switch, Button, Space,
+  Table, Tag, Card, Statistic, Row, Col, List, Input, Select, Form, Drawer, Modal, Tree, Alert, Skeleton,
+  Empty, Descriptions, Collapse, Popconfirm, Segmented, Tooltip, Badge, Divider, Typography, Progress,
+  InputNumber, Checkbox, Radio, message
+} = antd;
+const { Sider, Header, Content } = Layout;
+const { Text, Title, Paragraph } = Typography;
+
+/* ================================================================
+   1. ICONS — компактный собственный набор (stroke 1.7, 16–18px)
+   ================================================================ */
+const I = ({ d, size = 16, style, fill }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor"
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+    style={{ verticalAlign: '-2.5px', ...style }}>
+    {d}
+  </svg>
+);
+const P = (dd) => dd.map((x, i) => <path key={i} d={x} />);
+const Icons = {
+  dashboard: <I d={P(["M3 3h8v10H3z","M13 3h8v6h-8z","M13 13h8v8h-8z","M3 17h8v4H3z"])} />,
+  projects:  <I d={P(["M3 21h18","M5 21V7l7-4 7 4v14","M9 21v-6h6v6","M9 10h.01","M15 10h.01"])} />,
+  search:    <I d={P(["M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z","M21 21l-4.3-4.3"])} />,
+  docs:      <I d={P(["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z","M14 2v6h6","M9 13h6","M9 17h6"])} />,
+  depts:     <I d={P(["M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2","M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z","M23 21v-2a4 4 0 0 0-3-3.87","M16 3.13a4 4 0 0 1 0 7.75"])} />,
+  dataset:   <I d={P(["M12 8c4.97 0 9-1.34 9-3s-4.03-3-9-3-9 1.34-9 3 4.03 3 9 3z","M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3","M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"])} />,
+  plug:      <I d={P(["M9 7V2","M15 7V2","M6 7h12v5a6 6 0 0 1-12 0z","M12 18v4"])} />,
+  key:       <I d={P(["M21 2l-2 2","M15.5 8.5L19 5","M12.5 11.5L19 5l2 2-2.5 2.5","M11 13a5 5 0 1 0-7 7 5 5 0 0 0 7-7z"])} />,
+  gear2:     <I d={P(["M12 20a8 8 0 1 0 0-16","M12 20a8 8 0 0 1 0-16","M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z","M12 2v2","M12 20v2","M2 12h2","M20 12h2","M4.9 4.9l1.4 1.4","M17.7 17.7l1.4 1.4","M4.9 19.1l1.4-1.4","M17.7 6.3l1.4-1.4"])} />,
+  audit:     <I d={P(["M12 8v4l3 3","M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"])} />,
+  queue:     <I d={P(["M4 6h16","M4 12h10","M4 18h7","M19 12l3 3-3 3"])} />,
+  palette:   <I d={P(["M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-2 2c0 1 .5 1 .5 2s-1 2-2.5 2z","M7.5 11h.01","M11 7.5h.01","M15.5 9h.01"])} />,
+  door:      <I d={P(["M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4","M10 17l5-5-5-5","M15 12H3"])} />,
+  sun:       <I d={P(["M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z","M12 1v2","M12 21v2","M4.2 4.2l1.4 1.4","M18.4 18.4l1.4 1.4","M1 12h2","M21 12h2","M4.2 19.8l1.4-1.4","M18.4 5.6l1.4-1.4"])} size={15}/>,
+  moon:      <I d={P(["M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"])} size={15}/>,
+  upload:    <I d={P(["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","M17 8l-5-5-5 5","M12 3v12"])} size={15}/>,
+  download:  <I d={P(["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","M7 10l5 5 5-5","M12 15V3"])} size={15}/>,
+  plus:      <I d={P(["M12 5v14","M5 12h14"])} size={15}/>,
+  refresh:   <I d={P(["M23 4v6h-6","M1 20v-6h6","M3.5 9a9 9 0 0 1 14.9-3.4L23 10","M1 14l4.6 4.4A9 9 0 0 0 20.5 15"])} size={15}/>,
+  clock:     <I d={P(["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z","M12 7v5l3 2"])} size={13}/>,
+  spin:      <I d={P(["M21 12a9 9 0 1 1-6.2-8.6"])} size={13}/>,
+  check:     <I d={P(["M20 6L9 17l-5-5"])} size={13}/>,
+  cross:     <I d={P(["M18 6L6 18","M6 6l12 12"])} size={13}/>,
+  warn:      <I d={P(["M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z","M12 9v4","M12 17h.01"])} size={13}/>,
+  pause:     <I d={P(["M10 5v14","M15 5v14"])} size={13}/>,
+  archive:   <I d={P(["M21 8v13H3V8","M1 3h22v5H1z","M10 12h4"])} size={13}/>,
+  minus:     <I d={P(["M5 12h14"])} size={13}/>,
+  edit:      <I d={P(["M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7","M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"])} size={13}/>,
+  eye:       <I d={P(["M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z","M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"])} size={15}/>,
+  folder:    <I d={P(["M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"])} size={14}/>,
+  file:      <I d={P(["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z","M14 2v6h6"])} size={14}/>,
+  bolt:      <I d={P(["M13 2L3 14h8l-1 8 10-12h-8z"])} size={13}/>,
+  copy:      <I d={P(["M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2z","M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"])} size={14}/>,
+  cloud:     <I d={P(["M18 10h-1.3A7 7 0 1 0 6 17h12a4 4 0 0 0 0-8z"])} size={18} />,
+};
+
+/* ================================================================
+   2. DESIGN TOKENS — AntD ConfigProvider (light + dark)
+   Это тот же объект, что и в dkp-theme.ts
+   ================================================================ */
+const FONT = "'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
+const FONT_MONO = "'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace";
+
+const sharedToken = {
+  fontFamily: FONT, fontFamilyCode: FONT_MONO,
+  fontSize: 14, fontSizeSM: 12, fontSizeLG: 16,
+  fontSizeHeading1: 30, fontSizeHeading2: 24, fontSizeHeading3: 20, fontSizeHeading4: 16, fontSizeHeading5: 14,
+  fontWeightStrong: 600,
+  borderRadius: 6, borderRadiusLG: 10, borderRadiusSM: 4,
+  controlHeight: 34, controlHeightSM: 26, controlHeightLG: 40,
+  padding: 16, paddingLG: 24, paddingSM: 12, paddingXS: 8, margin: 16, marginLG: 24,
+  motionDurationFast: '0.1s', motionDurationMid: '0.16s', motionDurationSlow: '0.24s',
+  wireframe: false,
+};
+
+const lightTheme = {
+  algorithm: antdTheme.defaultAlgorithm,
+  token: {
+    ...sharedToken,
+    colorPrimary: '#2F54EB', colorInfo: '#2F54EB',
+    colorSuccess: '#3F8600', colorWarning: '#D48806', colorError: '#CF1322',
+    colorTextBase: '#1B2430',
+    colorText: '#1B2430', colorTextSecondary: '#5A6675', colorTextTertiary: '#8593A6', colorTextQuaternary: '#AEB9C9',
+    colorBgLayout: '#F2F4F8', colorBgContainer: '#FFFFFF', colorBgElevated: '#FFFFFF',
+    colorBorder: '#D9DFE9', colorBorderSecondary: '#E8ECF3',
+    colorFillSecondary: '#EEF1F6', colorFillTertiary: '#F4F6FA', colorFillQuaternary: '#F8FAFC',
+    boxShadow: '0 1px 2px rgba(27,36,48,.05), 0 2px 8px rgba(27,36,48,.06)',
+    boxShadowSecondary: '0 6px 16px rgba(27,36,48,.08), 0 3px 6px -4px rgba(27,36,48,.12), 0 9px 28px 8px rgba(27,36,48,.05)',
+  },
+  components: {
+    Layout: { siderBg: '#131A26', headerBg: '#FFFFFF', headerHeight: 56, headerPadding: '0 24px', bodyBg: '#F2F4F8', triggerBg: '#0E141E' },
+    Menu: {
+      darkItemBg: '#131A26', darkSubMenuItemBg: '#0E141E',
+      darkItemColor: '#93A1B8', darkItemHoverColor: '#DCE4F2', darkItemHoverBg: 'rgba(255,255,255,0.05)',
+      darkItemSelectedBg: 'rgba(84,116,255,0.18)', darkItemSelectedColor: '#A7BCFF',
+      itemHeight: 40, itemMarginInline: 8, itemBorderRadius: 6, iconMarginInlineEnd: 12,
+    },
+    Table: {
+      headerBg: '#F6F8FB', headerColor: '#5A6675', headerSplitColor: 'transparent',
+      cellPaddingBlock: 11, cellPaddingInline: 12, rowHoverBg: '#F4F7FE',
+      headerBorderRadius: 8, fontSize: 13.5,
+    },
+    Card: { headerFontSize: 15, paddingLG: 20 },
+    Tag: { fontSizeSM: 12, defaultBg: '#F0F2F7' },
+    Drawer: { paddingLG: 24 },
+    Tree: { titleHeight: 30, indentSize: 18, directoryNodeSelectedBg: 'rgba(47,84,235,.09)', nodeSelectedBg: 'rgba(47,84,235,.09)' },
+    Statistic: { contentFontSize: 26, titleFontSize: 12.5 },
+    Collapse: { headerBg: '#F6F8FB' },
+    Alert: { fontSize: 13 },
+    Form: { labelFontSize: 13, verticalLabelPadding: '0 0 6px' },
+    Breadcrumb: { fontSize: 13 },
+  },
+};
+
+const darkTheme = {
+  algorithm: antdTheme.darkAlgorithm,
+  token: {
+    ...sharedToken,
+    colorPrimary: '#6E8DFF', colorInfo: '#6E8DFF',
+    colorSuccess: '#67B33E', colorWarning: '#E0A431', colorError: '#E5534B',
+    colorTextBase: '#E7ECF4',
+    colorText: '#E7ECF4', colorTextSecondary: '#9AA6B8', colorTextTertiary: '#77839A', colorTextQuaternary: '#5A6579',
+    colorBgLayout: '#0F141C', colorBgContainer: '#161D28', colorBgElevated: '#1C2432',
+    colorBorder: '#2C3543', colorBorderSecondary: '#232B39',
+    colorFillSecondary: 'rgba(148,163,190,.12)', colorFillTertiary: 'rgba(148,163,190,.08)', colorFillQuaternary: 'rgba(148,163,190,.05)',
+    boxShadow: '0 1px 2px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.3)',
+    boxShadowSecondary: '0 6px 16px rgba(0,0,0,.45), 0 3px 6px -4px rgba(0,0,0,.5), 0 9px 28px 8px rgba(0,0,0,.3)',
+  },
+  components: {
+    Layout: { siderBg: '#0C1118', headerBg: '#161D28', headerHeight: 56, headerPadding: '0 24px', bodyBg: '#0F141C', triggerBg: '#080C12' },
+    Menu: {
+      darkItemBg: '#0C1118', darkSubMenuItemBg: '#080C12',
+      darkItemColor: '#8B98AE', darkItemHoverColor: '#DCE4F2', darkItemHoverBg: 'rgba(255,255,255,0.05)',
+      darkItemSelectedBg: 'rgba(110,141,255,0.16)', darkItemSelectedColor: '#A9BDFF',
+      itemHeight: 40, itemMarginInline: 8, itemBorderRadius: 6, iconMarginInlineEnd: 12,
+    },
+    Table: {
+      headerBg: '#1B2330', headerColor: '#9AA6B8', headerSplitColor: 'transparent',
+      cellPaddingBlock: 11, cellPaddingInline: 12, rowHoverBg: 'rgba(110,141,255,.07)',
+      headerBorderRadius: 8, fontSize: 13.5,
+    },
+    Card: { headerFontSize: 15, paddingLG: 20 },
+    Tag: { fontSizeSM: 12 },
+    Drawer: { paddingLG: 24 },
+    Tree: { titleHeight: 30, indentSize: 18, directoryNodeSelectedBg: 'rgba(110,141,255,.14)', nodeSelectedBg: 'rgba(110,141,255,.14)' },
+    Statistic: { contentFontSize: 26, titleFontSize: 12.5 },
+    Collapse: { headerBg: '#1B2330' },
+    Alert: { fontSize: 13 },
+    Form: { labelFontSize: 13, verticalLabelPadding: '0 0 6px' },
+    Breadcrumb: { fontSize: 13 },
+  },
+};
+
+/* ================================================================
+   3. STATUS SYSTEM — единый язык тегов (цвет + иконка + ярлык)
+   ================================================================ */
+const STATUS = {
+  // Пайплайн Dify / документ
+  queued:    { label: 'В очереди',   color: 'default',    icon: 'clock' },
+  uploading: { label: 'Загрузка',    color: 'geekblue',   icon: 'upload',  live: true },
+  waiting:   { label: 'Ожидание',    color: 'geekblue',   icon: 'pause' },
+  parsing:   { label: 'Парсинг',     color: 'blue',       icon: 'spin',    live: true },
+  cleaning:  { label: 'Очистка',     color: 'blue',       icon: 'spin',    live: true },
+  splitting: { label: 'Разбиение',   color: 'blue',       icon: 'spin',    live: true },
+  indexing:  { label: 'Индексация',  color: 'cyan',       icon: 'spin',    live: true },
+  completed: { label: 'Завершено',   color: 'green',      icon: 'check' },
+  error:     { label: 'Ошибка',      color: 'red',        icon: 'cross' },
+  archived:  { label: 'В архиве',    color: 'default',    icon: 'archive' },
+  disabled:  { label: 'Отключено',   color: 'default',    icon: 'minus' },
+  // Портал
+  draft:     { label: 'Черновик',    color: 'default',    icon: 'edit' },
+  active:    { label: 'Активен',     color: 'green',      icon: 'check' },
+  stored:    { label: 'В хранилище', color: 'purple',     icon: 'archive' },
+  indexed:   { label: 'Индексирован',color: 'green',      icon: 'bolt' },
+  deleted:   { label: 'Удалён',      color: 'volcano',    icon: 'cross' },
+  // Задачи
+  running:   { label: 'Выполняется', color: 'blue',       icon: 'spin',    live: true },
+  success:   { label: 'Успешно',     color: 'green',      icon: 'check' },
+  failed:    { label: 'Сбой',        color: 'red',        icon: 'cross' },
+  skipped:   { label: 'Пропущено',   color: 'orange',     icon: 'minus' },
+  // Интеграции
+  ok:        { label: 'Работает',        color: 'green',  icon: 'check' },
+  degraded:  { label: 'Деградация',      color: 'gold',   icon: 'warn' },
+  down:      { label: 'Недоступно',      color: 'red',    icon: 'cross' },
+  setup_required: { label: 'Требует настройки', color: 'purple', icon: 'gear2' },
+};
+
+const SpinKeyframes = () => (
+  <style>{`@keyframes dkpspin{to{transform:rotate(360deg)}} .st-live svg{animation:dkpspin 1.1s linear infinite;}`}</style>
+);
+
+const StatusTag = ({ s, style }) => {
+  const m = STATUS[s] || { label: s, color: 'default', icon: 'minus' };
+  return (
+    <Tag color={m.color} className={m.live ? 'st-live' : ''}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginInlineEnd: 0, fontWeight: 500, ...style }}>
+      {React.cloneElement(Icons[m.icon] || Icons.minus, {})}
+      {m.label}
+    </Tag>
+  );
+};
+
+/* ================================================================
+   4. MOCK DATA (русские данные строительной компании)
+   ================================================================ */
+const projects = [
+  { key:1, code:'TRN',  name:'ЖК «Туран»',           status:'active', docs:1284, indexed:1201, folders:42, updated:'08.07.2026 17:42' },
+  { key:2, code:'BTK',  name:'ЖК «Байтерек»',        status:'active', docs:963,  indexed:960,  folders:38, updated:'08.07.2026 12:10' },
+  { key:3, code:'ASP',  name:'БЦ «Астана Плаза»',    status:'active', docs:2107, indexed:1988, folders:57, updated:'07.07.2026 19:03' },
+  { key:4, code:'SRY',  name:'ЖК «Сарыарка»',        status:'draft',  docs:118,  indexed:0,    folders:12, updated:'05.07.2026 09:27' },
+  { key:5, code:'ALM9', name:'Паркинг «Алматы-9»',   status:'archived', docs:764, indexed:764, folders:31, updated:'11.03.2026 14:55' },
+];
+
+const folderTree = [
+  { title:'00-Карточка проекта', key:'00', children:[
+    { title:'Реквизиты и разрешения', key:'00-1' }, { title:'Команда проекта', key:'00-2' } ]},
+  { title:'01-ИРД (исходно-разрешительная)', key:'01', children:[
+    { title:'ГПЗУ и техусловия', key:'01-1' }, { title:'Экспертиза', key:'01-2' } ]},
+  { title:'02-Проектная документация', key:'02', children:[
+    { title:'АР — Архитектурные решения', key:'02-1' }, { title:'КЖ — Конструкции ж/б', key:'02-2' }, { title:'ОВиК', key:'02-3' } ]},
+  { title:'04-Договоры', key:'04', children:[
+    { title:'Генподряд', key:'04-1' }, { title:'Субподряд', key:'04-2' }, { title:'Поставка', key:'04-3' } ]},
+  { title:'05-Сметы', key:'05' },
+  { title:'06-Акты КС-2 / КС-3', key:'06', children:[
+    { title:'2026 · I квартал', key:'06-1' }, { title:'2026 · II квартал', key:'06-2' } ]},
+  { title:'07-Исполнительная документация', key:'07' },
+  { title:'08-Переписка', key:'08' },
+  { title:'99-Архив', key:'99' },
+];
+
+const documents = [
+  { key:1, name:'Договор генподряда №14-2026.pdf', project:'ЖК «Туран»', folder:'04-Договоры / Генподряд', type:'Договор', status:'indexed',  updated:'08.07.2026 17:42', size:'4,2 МБ' },
+  { key:2, name:'КС-2 акт №31 (июнь 2026).xlsx',   project:'ЖК «Туран»', folder:'06-Акты КС-2 / КС-3',    type:'Акт',     status:'indexing', updated:'08.07.2026 17:12', size:'812 КБ' },
+  { key:3, name:'КЖ-3. Каркас секции Б.pdf',       project:'ЖК «Байтерек»', folder:'02-Проектная / КЖ',   type:'Чертёж',  status:'parsing',  updated:'08.07.2026 16:58', size:'38,4 МБ' },
+  { key:4, name:'Смета. Кладка витражей v3.xls',   project:'БЦ «Астана Плаза»', folder:'05-Сметы',        type:'Смета',   status:'error',    updated:'08.07.2026 15:31', size:'1,1 МБ' },
+  { key:5, name:'ТУ на подключение теплосети.pdf', project:'ЖК «Туран»', folder:'01-ИРД / Техусловия',    type:'ИРД',     status:'queued',   updated:'08.07.2026 15:02', size:'2,7 МБ' },
+  { key:6, name:'Претензия подрядчику №7.docx',    project:'ЖК «Байтерек»', folder:'08-Переписка',        type:'Письмо',  status:'indexed',  updated:'08.07.2026 11:44', size:'214 КБ' },
+  { key:7, name:'Протокол совещания 03.07.docx',   project:'БЦ «Астана Плаза»', folder:'08-Переписка',    type:'Протокол',status:'archived', updated:'03.07.2026 18:20', size:'96 КБ' },
+];
+
+const jobs = [
+  { key:1, doc:'КС-2 акт №31 (июнь 2026).xlsx', project:'TRN', stage:'indexing',  status:'running', started:'17:12:04', finished:'—', err:null },
+  { key:2, doc:'КЖ-3. Каркас секции Б.pdf',     project:'BTK', stage:'parsing',   status:'running', started:'16:58:41', finished:'—', err:null },
+  { key:3, doc:'Смета. Кладка витражей v3.xls', project:'ASP', stage:'splitting', status:'failed',  started:'15:29:10', finished:'15:31:02', err:'Dify: превышен лимит размера чанка (413). Проверьте правила разбиения для .xls.' },
+  { key:4, doc:'ТУ на подключение теплосети.pdf', project:'TRN', stage:'queued',  status:'queued',  started:'—', finished:'—', err:null },
+  { key:5, doc:'Договор генподряда №14-2026.pdf', project:'TRN', stage:'indexing', status:'success', started:'14:02:11', finished:'14:04:36', err:null },
+  { key:6, doc:'Протокол совещания 03.07.docx', project:'ASP', stage:'parsing',   status:'skipped', started:'—', finished:'—', err:'Документ помечен как архивный' },
+];
+
+const auditRows = [
+  { key:1, actor:'a.serikova', role:'Администратор', action:'settings.update', entity:'dify.api_url', time:'08.07.2026 17:50' },
+  { key:2, actor:'d.baldin',   role:'Редактор',      action:'document.upload', entity:'КС-2 акт №31 (июнь 2026).xlsx', time:'08.07.2026 17:12' },
+  { key:3, actor:'d.baldin',   role:'Редактор',      action:'document.reindex', entity:'Смета. Кладка витражей v3.xls', time:'08.07.2026 15:34' },
+  { key:4, actor:'m.omarov',   role:'Наблюдатель',   action:'document.download', entity:'Договор генподряда №14-2026.pdf', time:'08.07.2026 14:21' },
+  { key:5, actor:'a.serikova', role:'Администратор', action:'apikey.revoke', entity:'ci-deploy-2025', time:'08.07.2026 10:05' },
+];
+
+const departments = [
+  { key:1, name:'ПТО', full:'Производственно-технический отдел', people:14, docs:3120, skills:'## Компетенции\n- Исполнительная документация, акты скрытых работ\n- Проверка объёмов по КС-2/КС-3\n- Ведение журналов работ' },
+  { key:2, name:'Сметный отдел', full:'Сметно-договорной отдел', people:8, docs:1874, skills:'## Компетенции\n- Составление и проверка смет (АВС-4, ГЭСН)\n- Коэффициенты и индексы пересчёта\n- Договорные цены' },
+  { key:3, name:'Юридический', full:'Юридический департамент', people:5, docs:936, skills:'## Компетенции\n- Договоры генподряда и субподряда\n- Претензионная работа\n- Судебные материалы' },
+  { key:4, name:'Финансовый', full:'Финансовый департамент', people:6, docs:1240, skills:'## Компетенции\n- Платёжные календари\n- Акты сверки\n- Банковские гарантии' },
+  { key:5, name:'Снабжение', full:'Отдел снабжения и логистики', people:9, docs:1552, skills:'## Компетенции\n- Спецификации и заявки\n- Договоры поставки\n- Входной контроль материалов' },
+];
+
+const datasets = [
+  { key:1, map:'TRN / 04-Договоры', ds:'project_trn__contracts', id:'ds_9f2c…a41e', docs:214, status:'completed' },
+  { key:2, map:'TRN / 06-Акты КС', ds:'project_trn__acts', id:'ds_77b1…03cd', docs:388, status:'indexing' },
+  { key:3, map:'BTK / 02-Проектная', ds:'project_btk__design', id:'ds_c4e8…9b12', docs:451, status:'completed' },
+  { key:4, map:'ASP / 05-Сметы', ds:'project_asp__estimates', id:'ds_1a0d…77f0', docs:167, status:'error' },
+  { key:5, map:'SRY / 00-Карточка', ds:'project_sry__card', id:'ds_e30b…5c99', docs:12, status:'waiting' },
+];
+
+const apiKeys = [
+  { key:1, name:'portal-backend', scopes:['read','write','admin'], prefix:'dkp_live_8f3k…', created:'12.01.2026', expires:'12.01.2027', last:'08.07.2026 17:49', status:'active' },
+  { key:2, name:'ci-deploy-2026', scopes:['read','write'], prefix:'dkp_live_2mq7…', created:'03.03.2026', expires:'03.09.2026', last:'07.07.2026 22:14', status:'active' },
+  { key:3, name:'bi-readonly', scopes:['read'], prefix:'dkp_live_z61p…', created:'20.05.2026', expires:'—', last:'01.07.2026 08:02', status:'active' },
+  { key:4, name:'ci-deploy-2025', scopes:['read','write'], prefix:'dkp_live_ka9v…', created:'14.06.2025', expires:'14.06.2026', last:'30.06.2026 11:37', status:'deleted' },
+];
+
+const searchResults = [
+  { key:1, score:0.92, doc:'Договор генподряда №14-2026.pdf', ds:'project_trn__contracts', path:'04-Договоры / Генподряд',
+    snip:'…Подрядчик обязуется завершить работы по устройству монолитного каркаса секций А–В в срок до 30 ноября 2026 года. Гарантийный срок на несущие конструкции составляет 120 месяцев…' },
+  { key:2, score:0.87, doc:'КС-2 акт №31 (июнь 2026).xlsx', ds:'project_trn__acts', path:'06-Акты КС-2 / КС-3',
+    snip:'…выполнено работ по монолитному каркасу секции Б на сумму 84 316 200 ₸, в том числе: бетон B25 — 612 м³, арматура А500С — 96,4 т…' },
+  { key:3, score:0.81, doc:'КЖ-3. Каркас секции Б.pdf', ds:'project_btk__design', path:'02-Проектная / КЖ',
+    snip:'…узел сопряжения колонны К-3 с плитой перекрытия: защитный слой 30 мм, класс бетона B30, схема армирования по листу КЖ-3.14…' },
+];
+
+/* ================================================================
+   5. SHARED UI PIECES
+   ================================================================ */
+const PageHead = ({ title, desc, extra }) => {
+  const { token } = antdTheme.useToken();
+  return (
+    <div className="page-head">
+      <div>
+        <h1 className="page-title" style={{ color: token.colorText }}>{title}</h1>
+        {desc && <div className="page-desc" style={{ color: token.colorTextSecondary }}>{desc}</div>}
+      </div>
+      {extra && <Space wrap>{extra}</Space>}
+    </div>
+  );
+};
+
+const RowActions = ({ items }) => (
+  <Space size={4}>
+    {items.map(([icon, tip], i) => (
+      <Tooltip title={tip} key={i}>
+        <Button type="text" size="small" icon={Icons[icon]} />
+      </Tooltip>
+    ))}
+  </Space>
+);
+
+const StateBar = ({ value, onChange }) => (
+  <Segmented size="small" value={value} onChange={onChange}
+    options={[{label:'Данные',value:'data'},{label:'Загрузка',value:'loading'},{label:'Пусто',value:'empty'},{label:'Ошибка',value:'error'}]} />
+);
+
+const ErrorAlert = ({ onRetry }) => (
+  <Alert type="error" showIcon message="Не удалось загрузить данные"
+    description="Сервер вернул ошибку 502. Проверьте подключение к API портала и повторите запрос."
+    action={<Button size="small" danger onClick={onRetry}>Повторить</Button>} />
+);
+
+const EmptyState = ({ text, action }) => (
+  <Empty description={text} style={{ padding: '48px 0' }}>{action}</Empty>
+);
+
+/* ================================================================
+   6. SCREENS
+   ================================================================ */
+
+/* ---- 0. LOGIN ---- */
+const LoginScreen = ({ onEnter, dark }) => {
+  const { token } = antdTheme.useToken();
+  const [err, setErr] = useState(true);
+  return (
+    <div className="login-wrap" style={{ background: token.colorBgLayout }}>
+      <div className="login-brand">
+        <div className="login-grid" />
+        <div style={{ position:'relative', display:'flex', alignItems:'center', gap:12 }}>
+          <div className="dkp-logo-mark" style={{ width:38, height:38, borderRadius:10 }}>{Icons.cloud}</div>
+          <div>
+            <div style={{ fontWeight:700, fontSize:19, letterSpacing:.4 }}>DKP</div>
+            <div style={{ fontSize:11, letterSpacing:.9, textTransform:'uppercase', color:'#7E8DA8' }}>Document Knowledge Portal</div>
+          </div>
+        </div>
+        <div style={{ position:'relative', maxWidth:460 }}>
+          <div style={{ fontSize:28, fontWeight:600, lineHeight:1.25, marginBottom:14 }}>
+            Вся документация ваших объектов — в одном хранилище, с умным поиском.
+          </div>
+          <div style={{ color:'#9AA8C2', fontSize:14, lineHeight:1.65 }}>
+            Договоры, сметы, акты КС-2/КС-3, проектная и исполнительная документация — с версиями,
+            правами доступа и семантическим поиском по каждому проекту.
+          </div>
+        </div>
+        <div style={{ position:'relative', color:'#5F6E8A', fontSize:12 }}>© 2026 · Внутренняя система документооборота</div>
+      </div>
+      <div className="login-form-col">
+        <Card style={{ width:380, boxShadow: token.boxShadowSecondary }} bordered={false}>
+          <Title level={4} style={{ marginBottom:4 }}>Вход в портал</Title>
+          <Paragraph type="secondary" style={{ fontSize:13, marginBottom:20 }}>
+            Используйте корпоративную учётную запись
+          </Paragraph>
+          {err && <Alert type="error" showIcon closable onClose={()=>setErr(false)} style={{ marginBottom:16 }}
+            message="Неверный e-mail или пароль" description="Проверьте данные и попробуйте снова. После 5 неудачных попыток вход будет заблокирован на 15 минут." />}
+          <Form layout="vertical" requiredMark={false}>
+            <Form.Item label="Рабочий e-mail" required>
+              <Input size="large" placeholder="i.ivanov@stroyfirma.kz" />
+            </Form.Item>
+            <Form.Item label="Пароль" required style={{ marginBottom:12 }}>
+              <Input.Password size="large" placeholder="••••••••" />
+            </Form.Item>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+              <Checkbox>Запомнить меня</Checkbox>
+              <a style={{ fontSize:13 }}>Забыли пароль?</a>
+            </div>
+            <Button type="primary" size="large" block onClick={onEnter}>Войти</Button>
+          </Form>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+/* ---- 1. DASHBOARD ---- */
+const PipelineStrip = () => {
+  const { token } = antdTheme.useToken();
+  const stages = [
+    { l:'В очереди', c:12, col: token.colorTextSecondary },
+    { l:'Парсинг', c:3, col: token.colorInfo },
+    { l:'Очистка', c:1, col: token.colorInfo },
+    { l:'Разбиение', c:2, col: token.colorInfo },
+    { l:'Индексация', c:4, col: '#13A8A8' },
+    { l:'Готово за сутки', c:126, col: token.colorSuccess },
+    { l:'Ошибки', c:7, col: token.colorError },
+  ];
+  return (
+    <Card size="small" styles={{ body:{ padding:'6px 8px' } }} title={<Space size={8}>{Icons.queue}<span>Конвейер обработки — сейчас</span></Space>}
+      extra={<a style={{fontSize:13}}>Открыть очередь →</a>}>
+      <div className="pipe" style={{ '--pipe-border': token.colorBorderSecondary }}>
+        {stages.map((s,i)=>(
+          <div key={i} className="pipe-stage" style={{ background: token.colorBgContainer, borderTop:`1px solid ${token.colorBorderSecondary}`, borderBottom:`1px solid ${token.colorBorderSecondary}` }}>
+            <div className="pipe-count" style={{ color: s.col }}>{s.c}</div>
+            <div className="pipe-label" style={{ color: token.colorTextTertiary }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+};
+
+const DashboardScreen = () => {
+  const { token } = antdTheme.useToken();
+  const kpi = [
+    { t:'Проектов', v:5, suffix:'', d:null },
+    { t:'Документов', v:5236, d:'+38 за сутки' },
+    { t:'Проиндексировано', v:93.4, suffix:'%', d:'4 889 из 5 236' },
+    { t:'Документов с ошибкой', v:7, d:'требуют внимания', warn:true },
+    { t:'Задач в очереди', v:22, d:'≈ 12 мин до завершения' },
+  ];
+  const health = [
+    { n:'S3 (MinIO)', s:'ok', lat:'12 мс' }, { n:'Dify', s:'ok', lat:'84 мс' },
+    { n:'LM Studio', s:'degraded', lat:'2,4 с' }, { n:'Qdrant', s:'ok', lat:'9 мс' },
+  ];
+  return (
+    <>
+      <PageHead title="Дашборд" desc="Состояние хранилища, конвейера обработки и интеграций"
+        extra={<Button icon={Icons.refresh}>Обновить</Button>} />
+      <Row gutter={[16,16]}>
+        {kpi.map((k,i)=>(
+          <Col xs={12} md={8} xl={Math.floor(24/5) + (i<4?1:0)} key={i} flex="1 1 180px">
+            <Card size="small" className="kpi-card">
+              <Statistic title={k.t} value={k.v} suffix={k.suffix}
+                valueStyle={{ color: k.warn ? token.colorError : token.colorText, fontWeight:600 }} />
+              {k.d && <Text type={k.warn?'danger':'secondary'} style={{ fontSize:12 }}>{k.d}</Text>}
+            </Card>
+          </Col>
+        ))}
+      </Row>
+      <div style={{ height:16 }} />
+      <PipelineStrip />
+      <div style={{ height:16 }} />
+      <Row gutter={[16,16]}>
+        <Col xs={24} lg={9}>
+          <Card size="small" title="Последние загрузки" extra={<a style={{fontSize:13}}>Все документы</a>} styles={{ body:{padding:'4px 0'} }}>
+            <List size="small" dataSource={documents.slice(0,5)} renderItem={d=>(
+              <List.Item style={{ padding:'10px 16px' }}
+                actions={[<StatusTag s={d.status} key="s" />]}>
+                <List.Item.Meta
+                  avatar={<span style={{color:token.colorTextTertiary}}>{Icons.file}</span>}
+                  title={<Text style={{fontSize:13.5}} ellipsis>{d.name}</Text>}
+                  description={<Text type="secondary" style={{fontSize:12}}>{d.project} · {d.updated}</Text>} />
+              </List.Item>
+            )}/>
+          </Card>
+        </Col>
+        <Col xs={24} lg={9}>
+          <Card size="small" title="Журнал действий" extra={<a style={{fontSize:13}}>Весь аудит</a>} styles={{ body:{padding:'4px 0'} }}>
+            <List size="small" dataSource={auditRows.slice(0,5)} renderItem={a=>(
+              <List.Item style={{ padding:'10px 16px' }}>
+                <List.Item.Meta
+                  avatar={<Avatar size={26} style={{ background: token.colorFillSecondary, color: token.colorTextSecondary, fontSize:11, fontWeight:600 }}>{a.actor.slice(0,1).toUpperCase()}</Avatar>}
+                  title={<Text style={{fontSize:13.5}}><b>{a.actor}</b> · <span className="mono" style={{fontSize:12}}>{a.action}</span></Text>}
+                  description={<Text type="secondary" style={{fontSize:12}} ellipsis>{a.entity} · {a.time}</Text>} />
+              </List.Item>
+            )}/>
+          </Card>
+        </Col>
+        <Col xs={24} lg={6}>
+          <Card size="small" title="Интеграции" extra={<a style={{fontSize:13}}>Подробнее</a>}>
+            <Space direction="vertical" size={10} style={{ width:'100%' }}>
+              {health.map((h,i)=>(
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <Text style={{ fontSize:13.5 }}>{h.n}</Text>
+                  <Space size={8}>
+                    <Text type="secondary" className="num" style={{ fontSize:12 }}>{h.lat}</Text>
+                    <StatusTag s={h.s} />
+                  </Space>
+                </div>
+              ))}
+            </Space>
+          </Card>
+        </Col>
+      </Row>
+    </>
+  );
+};
+
+/* ---- 2. PROJECTS ---- */
+const ProjectsScreen = () => {
+  const [view, setView] = useState('data');
+  const [drawer, setDrawer] = useState(false);
+  const cols = [
+    { title:'Код', dataIndex:'code', width:80, render:v=><Text className="mono">{v}</Text> },
+    { title:'Название', dataIndex:'name', render:v=><Text strong style={{fontSize:13.5}}>{v}</Text> },
+    { title:'Статус', dataIndex:'status', width:130, render:v=><StatusTag s={v} /> },
+    { title:'Документов', dataIndex:'docs', width:110, align:'right', className:'col-num' },
+    { title:'Проиндексировано', dataIndex:'indexed', width:150, align:'right', className:'col-num',
+      render:(v,r)=><Space size={8}><span className="num">{v}</span><Progress type="circle" size={18} percent={Math.round(v/r.docs*100)||0} showInfo={false}/></Space> },
+    { title:'Папок', dataIndex:'folders', width:80, align:'right', className:'col-num' },
+    { title:'Обновлён', dataIndex:'updated', width:150, render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+    { title:'', key:'a', width:120, render:()=><RowActions items={[['eye','Открыть'],['edit','Изменить'],['refresh','Реиндексация']]} /> },
+  ];
+  return (
+    <>
+      <PageHead title="Проекты" desc="Объекты строительства и их хранилища документов"
+        extra={<><StateBar value={view} onChange={setView} /><Button type="primary" icon={Icons.plus} onClick={()=>setDrawer(true)}>Новый проект</Button></>} />
+      <Card size="small" styles={{ body:{ padding: view==='data'?0:16 } }}>
+        {view==='loading' && <Skeleton active paragraph={{ rows:6 }} />}
+        {view==='error' && <ErrorAlert onRetry={()=>setView('data')} />}
+        {view==='empty' && <EmptyState text="Проектов пока нет — создайте первый объект" action={<Button type="primary" icon={Icons.plus} onClick={()=>setDrawer(true)}>Создать проект</Button>} />}
+        {view==='data' && <Table columns={cols} dataSource={projects} pagination={{ pageSize:10, size:'small', showTotal:t=>`Всего: ${t}` }} size="middle" />}
+      </Card>
+      <Drawer title="Новый проект" width={440} open={drawer} onClose={()=>setDrawer(false)}
+        footer={<Space style={{float:'right'}}><Button onClick={()=>setDrawer(false)}>Отмена</Button><Button type="primary" onClick={()=>setDrawer(false)}>Создать проект</Button></Space>}>
+        <Form layout="vertical" requiredMark="optional">
+          <Form.Item label="Код проекта" required tooltip="Латиницей, 2–6 символов. Используется в именах Dify-датасетов: project_{код}__раздел"><Input placeholder="TRN" style={{width:140}} className="mono" /></Form.Item>
+          <Form.Item label="Название" required><Input placeholder="ЖК «Туран»" /></Form.Item>
+          <Form.Item label="Тип объекта"><Select placeholder="Выберите тип" options={['Жилой комплекс','Бизнес-центр','Паркинг','Инфраструктура'].map(v=>({value:v}))} /></Form.Item>
+          <Form.Item label="Ответственный отдел"><Select placeholder="ПТО" options={departments.map(d=>({value:d.name}))} /></Form.Item>
+          <Form.Item label="Описание"><Input.TextArea rows={3} placeholder="Краткое описание объекта" /></Form.Item>
+          <Alert type="info" showIcon message="Структура папок 00–99 будет создана автоматически по стандартному шаблону." />
+        </Form>
+      </Drawer>
+    </>
+  );
+};
+
+/* ---- 3. PROJECT DETAIL ---- */
+const ProjectDetailScreen = () => {
+  const { token } = antdTheme.useToken();
+  const [upload, setUpload] = useState(false);
+  const [selected, setSelected] = useState(['04-1']);
+  const docCols = [
+    { title:'Документ', dataIndex:'name', render:(v,r)=>(
+      <Space size={8}><span style={{color:token.colorTextTertiary}}>{Icons.file}</span>
+        <div><Text strong style={{fontSize:13.5}}>{v}</Text><br/><Text type="secondary" style={{fontSize:12}}>{r.type} · версия 3 · {r.size}</Text></div>
+      </Space>) },
+    { title:'Статус', dataIndex:'status', width:140, render:v=><StatusTag s={v} /> },
+    { title:'Обновлён', dataIndex:'updated', width:150, render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+    { title:'', key:'a', width:150, render:()=><RowActions items={[['eye','Открыть'],['download','Скачать'],['refresh','Реиндексация'],['archive','Версии']]} /> },
+  ];
+  return (
+    <>
+      <PageHead title={<Space size={10}>ЖК «Туран» <Tag className="mono" style={{marginInlineStart:0}}>TRN</Tag><StatusTag s="active"/></Space>}
+        desc="1 284 документа · 42 папки · проиндексировано 93,5 %"
+        extra={<><Button icon={Icons.refresh}>Реиндексация проекта</Button><Button type="primary" icon={Icons.upload} onClick={()=>setUpload(true)}>Загрузить документ</Button></>} />
+      <Row gutter={16}>
+        <Col xs={24} md={8} lg={7} xl={6}>
+          <Card size="small" title="Папки" styles={{ body:{ padding:'8px 8px', maxHeight:520, overflow:'auto' } }}
+            extra={<Tooltip title="Новая папка"><Button size="small" type="text" icon={Icons.plus}/></Tooltip>}>
+            <Tree treeData={folderTree} defaultExpandedKeys={['04']} selectedKeys={selected}
+              onSelect={k=>k.length&&setSelected(k)} blockNode showLine={{ showLeafIcon:false }} />
+          </Card>
+        </Col>
+        <Col xs={24} md={16} lg={17} xl={18}>
+          <Card size="small" styles={{ body:{ padding:0 } }}
+            title={<Breadcrumb items={[{title:'TRN'},{title:'04-Договоры'},{title:<Text strong>Генподряд</Text>}]} />}
+            extra={<Space><Input.Search placeholder="Поиск в папке" size="small" style={{width:200}} /><Select size="small" defaultValue="all" style={{width:140}} options={[{value:'all',label:'Все статусы'},{value:'error',label:'Только ошибки'}]} /></Space>}>
+            <Table columns={docCols} dataSource={documents.slice(0,5)} pagination={false} size="middle" />
+          </Card>
+        </Col>
+      </Row>
+      <Drawer title="Загрузка документа" width={460} open={upload} onClose={()=>setUpload(false)}
+        footer={<Space style={{float:'right'}}><Button onClick={()=>setUpload(false)}>Отмена</Button><Button type="primary" icon={Icons.upload} onClick={()=>setUpload(false)}>Загрузить и отправить в обработку</Button></Space>}>
+        <div style={{ border:`1.5px dashed ${token.colorBorder}`, borderRadius:10, padding:'32px 16px', textAlign:'center', marginBottom:20, background:token.colorFillQuaternary }}>
+          <div style={{ color: token.colorPrimary, marginBottom:8 }}>{React.cloneElement(Icons.upload,{})}</div>
+          <Text>Перетащите файлы сюда или <a>выберите на диске</a></Text><br/>
+          <Text type="secondary" style={{fontSize:12}}>PDF, DOCX, XLSX, DWG до 200 МБ · загрузка напрямую в S3</Text>
+        </div>
+        <Form layout="vertical">
+          <Form.Item label="Папка назначения"><Input value="04-Договоры / Генподряд" readOnly suffix={Icons.folder} /></Form.Item>
+          <Form.Item label="Тип документа"><Select defaultValue="Договор" options={['Договор','Акт','Смета','Чертёж','Письмо','Протокол','ИРД'].map(v=>({value:v}))} /></Form.Item>
+          <Form.Item label="Отдел-владелец"><Select defaultValue="Юридический" options={departments.map(d=>({value:d.name}))} /></Form.Item>
+        </Form>
+        <Alert type="info" showIcon message="После загрузки документ автоматически попадёт в очередь обработки Dify. Статус можно отслеживать в этой таблице." />
+      </Drawer>
+    </>
+  );
+};
+
+/* ---- 4. SEARCH ---- */
+const SearchScreen = () => {
+  const { token } = antdTheme.useToken();
+  const [mode, setMode] = useState('results');
+  return (
+    <>
+      <PageHead title="Семантический поиск" desc="Поиск по смыслу во всех проиндексированных документах (RAG · Dify + Qdrant)" />
+      <Card size="small" style={{ marginBottom:16 }}>
+        <Space.Compact style={{ width:'100%' }}>
+          <Input size="large" defaultValue="сроки устройства монолитного каркаса секции Б" prefix={<span style={{color:token.colorTextTertiary}}>{Icons.search}</span>} />
+          <Button size="large" type="primary" onClick={()=>setMode('results')}>Найти</Button>
+        </Space.Compact>
+        <Space wrap style={{ marginTop:12 }}>
+          <Select size="small" defaultValue="TRN" style={{ minWidth:150 }} options={projects.map(p=>({value:p.code,label:p.name}))} />
+          <Select size="small" placeholder="Раздел" style={{ minWidth:150 }} options={folderTree.map(f=>({value:f.key,label:f.title}))} />
+          <Select size="small" placeholder="Тип документа" style={{ minWidth:140 }} options={['Договор','Акт','Смета','Чертёж'].map(v=>({value:v}))} />
+          <Select size="small" placeholder="Отдел" style={{ minWidth:130 }} options={departments.map(d=>({value:d.name}))} />
+          <Radio.Group size="small" defaultValue="project" optionType="button" buttonStyle="solid"
+            options={[{label:'Проект',value:'project'},{label:'Все проекты',value:'all'}]} />
+          <Button size="small" type="text" onClick={()=>setMode(mode==='results'?'searching':mode==='searching'?'none':'results')}>Показать: {mode==='results'?'результаты':mode==='searching'?'поиск…':'нет результатов'}</Button>
+        </Space>
+      </Card>
+      {mode==='searching' && <Card size="small"><Skeleton active paragraph={{rows:3}}/><Divider style={{margin:'12px 0'}}/><Skeleton active paragraph={{rows:3}}/></Card>}
+      {mode==='none' && <Card size="small"><EmptyState text={<>По запросу ничего не найдено в проекте <b>ЖК «Туран»</b>. Попробуйте расширить область до всех проектов или изменить формулировку.</>} action={<Button>Искать во всех проектах</Button>} /></Card>}
+      {mode==='results' && (
+        <>
+          <Text type="secondary" style={{ fontSize:13 }}>Найдено 3 фрагмента · 2 датасета · 0,42 с</Text>
+          <div style={{ height:10 }} />
+          <Space direction="vertical" size={12} style={{ width:'100%' }}>
+            {searchResults.map(r=>(
+              <Card size="small" key={r.key} hoverable>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+                  <Space size={10} wrap>
+                    <Badge count={r.score.toFixed(2)} color={r.score>0.9?token.colorSuccess:token.colorPrimary} overflowCount={999} />
+                    <Text strong>{r.doc}</Text>
+                    <Tag className="mono" style={{fontSize:11}}>{r.ds}</Tag>
+                  </Space>
+                  <Space size={4}>
+                    <Button size="small" type="text" icon={Icons.eye}>Открыть документ</Button>
+                    <Button size="small" type="text" icon={Icons.download} />
+                  </Space>
+                </div>
+                <Paragraph style={{ margin:'8px 0 6px', fontSize:13.5, lineHeight:1.65 }}>
+                  {r.snip.split('монолитного каркаса').map((part,i,arr)=> i<arr.length-1
+                    ? <React.Fragment key={i}>{part}<mark style={{ background: token.colorWarningBg, color:'inherit', borderRadius:3, padding:'0 2px' }}>монолитного каркаса</mark></React.Fragment>
+                    : part)}
+                </Paragraph>
+                <Text type="secondary" style={{ fontSize:12 }}>{Icons.folder} {r.path}</Text>
+              </Card>
+            ))}
+          </Space>
+        </>
+      )}
+    </>
+  );
+};
+
+/* ---- 5. DOCUMENTS (global) ---- */
+const DocumentsScreen = () => {
+  const cols = [
+    { title:'Документ', dataIndex:'name', render:v=><Text strong style={{fontSize:13.5}}>{v}</Text> },
+    { title:'Проект', dataIndex:'project', width:170 },
+    { title:'Папка', dataIndex:'folder', width:210, render:v=><Text type="secondary" style={{fontSize:12.5}}>{v}</Text> },
+    { title:'Тип', dataIndex:'type', width:100, render:v=><Tag style={{marginInlineEnd:0}}>{v}</Tag> },
+    { title:'Статус', dataIndex:'status', width:140, render:v=><StatusTag s={v}/> },
+    { title:'Обновлён', dataIndex:'updated', width:150, render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+    { title:'Размер', dataIndex:'size', width:90, align:'right', className:'col-num' },
+    { title:'', key:'a', width:150, render:()=><RowActions items={[['eye','Открыть'],['download','Скачать'],['refresh','Реиндексация'],['archive','Версии']]} /> },
+  ];
+  return (
+    <>
+      <PageHead title="Документы" desc="Все документы портала по всем проектам" extra={<Button icon={Icons.download}>Экспорт реестра</Button>} />
+      <Card size="small" styles={{ body:{ padding:0 } }}
+        title={<Space wrap>
+          <Input.Search placeholder="Название или номер документа" style={{ width:260 }} size="small" />
+          <Select size="small" placeholder="Проект" style={{minWidth:150}} options={projects.map(p=>({value:p.code,label:p.name}))} allowClear />
+          <Select size="small" placeholder="Статус" style={{minWidth:130}} allowClear
+            options={['queued','indexing','indexed','error','archived'].map(s=>({value:s,label:STATUS[s].label}))} />
+          <Select size="small" placeholder="Тип" style={{minWidth:120}} options={['Договор','Акт','Смета','Чертёж'].map(v=>({value:v}))} allowClear />
+        </Space>}>
+        <Table columns={cols} dataSource={documents} size="middle"
+          pagination={{ pageSize:10, size:'small', showTotal:t=>`Всего: 5 236 · показано ${t}` }} scroll={{ x: 1100 }} />
+      </Card>
+    </>
+  );
+};
+
+/* ---- 6. DEPARTMENTS ---- */
+const DepartmentsScreen = () => {
+  const { token } = antdTheme.useToken();
+  const [edit, setEdit] = useState(false);
+  return (
+    <>
+      <PageHead title="Отделы" desc="Департаменты-владельцы документов и их компетенции (skills.md)"
+        extra={<Button type="primary" icon={Icons.plus}>Добавить отдел</Button>} />
+      <Row gutter={[16,16]}>
+        {departments.map(d=>(
+          <Col xs={24} md={12} xl={8} key={d.key}>
+            <Card size="small" title={d.name} extra={<Button size="small" type="text" icon={Icons.edit} onClick={()=>setEdit(true)}>Изменить</Button>}>
+              <Text type="secondary" style={{ fontSize:12.5 }}>{d.full}</Text>
+              <div style={{ display:'flex', gap:24, margin:'12px 0' }}>
+                <Statistic title="Сотрудников" value={d.people} valueStyle={{fontSize:18,fontWeight:600}} />
+                <Statistic title="Документов" value={d.docs} valueStyle={{fontSize:18,fontWeight:600}} />
+              </div>
+              <div style={{ background: token.colorFillTertiary, borderRadius:8, padding:'10px 12px', fontSize:12.5, lineHeight:1.7 }}>
+                <Text type="secondary" style={{fontSize:11, textTransform:'uppercase', letterSpacing:.5}}>skills.md · предпросмотр</Text>
+                {d.skills.split('\n').map((l,i)=> l.startsWith('##')
+                  ? <div key={i} style={{fontWeight:600, margin:'4px 0 2px'}}>{l.replace('## ','')}</div>
+                  : <div key={i} style={{color:token.colorTextSecondary}}>{l.replace('- ','•  ')}</div>)}
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+      <Drawer title="Отдел: ПТО" width={520} open={edit} onClose={()=>setEdit(false)}
+        footer={<Space style={{float:'right'}}><Button onClick={()=>setEdit(false)}>Отмена</Button><Button type="primary" onClick={()=>setEdit(false)}>Сохранить</Button></Space>}>
+        <Form layout="vertical">
+          <Form.Item label="Короткое название"><Input defaultValue="ПТО" /></Form.Item>
+          <Form.Item label="Полное название"><Input defaultValue="Производственно-технический отдел" /></Form.Item>
+          <Form.Item label="Компетенции (skills.md)" tooltip="Markdown. Используется как контекст при маршрутизации поисковых запросов.">
+            <Input.TextArea rows={9} className="mono" defaultValue={departments[0].skills} style={{fontSize:12.5, lineHeight:1.7}} />
+          </Form.Item>
+        </Form>
+      </Drawer>
+    </>
+  );
+};
+
+/* ---- 7. DIFY DATASETS ---- */
+const DatasetsScreen = () => (
+  <>
+    <PageHead title="Dify Datasets" desc="Соответствие разделов проектов датасетам Dify (только чтение)" />
+    <Alert type="info" showIcon style={{ marginBottom:16 }}
+      message={<>Датасеты именуются по схеме <Text code className="mono">project_&#123;код&#125;__&#123;раздел&#125;</Text></>}
+      description="Портал создаёт и синхронизирует датасеты автоматически при появлении документов в разделе. Ручное изменение датасетов в Dify не рекомендуется." />
+    <Card size="small" styles={{ body:{padding:0} }}>
+      <Table size="middle" pagination={false} dataSource={datasets} columns={[
+        { title:'Проект / раздел', dataIndex:'map', render:v=><Text strong style={{fontSize:13.5}}>{v}</Text> },
+        { title:'Датасет Dify', dataIndex:'ds', render:v=><Text className="mono">{v}</Text> },
+        { title:'ID', dataIndex:'id', width:170, render:v=><Text type="secondary" className="mono" style={{fontSize:12}}>{v}</Text> },
+        { title:'Документов', dataIndex:'docs', width:110, align:'right', className:'col-num' },
+        { title:'Статус', dataIndex:'status', width:150, render:v=><StatusTag s={v}/> },
+      ]} />
+    </Card>
+  </>
+);
+
+/* ---- 8. INTEGRATIONS ---- */
+const IntegrationsScreen = () => {
+  const { token } = antdTheme.useToken();
+  const items = [
+    { n:'S3 · MinIO', s:'ok', lat:'12 мс', d:{ 'Endpoint':'https://s3.internal:9000', 'Bucket':'dkp-originals', 'Регион':'kz-central-1', 'Версия API':'v4' } },
+    { n:'Dify', s:'ok', lat:'84 мс', d:{ 'API URL':'https://dify.internal/v1', 'Версия':'0.15.2', 'Датасетов':'27', 'Рабочих процессов':'3' } },
+    { n:'LM Studio', s:'degraded', lat:'2,4 с', d:{ 'Endpoint':'http://10.4.0.12:1234', 'Модель эмбеддингов':'bge-m3', 'Очередь':'14 запросов', 'GPU':'92 % загрузка' } },
+    { n:'Qdrant', s:'ok', lat:'9 мс', d:{ 'Endpoint':'http://qdrant.internal:6333', 'Коллекций':'27', 'Векторов':'1,84 млн', 'Диск':'38 / 200 ГБ' } },
+  ];
+  return (
+    <>
+      <PageHead title="Интеграции" desc="Состояние внешних сервисов конвейера обработки" extra={<Button icon={Icons.refresh}>Проверить все</Button>} />
+      <Row gutter={[16,16]}>
+        {items.map((it,i)=>(
+          <Col xs={24} lg={12} key={i}>
+            <Card size="small"
+              title={<Space size={10}>{Icons.plug}<span>{it.n}</span><StatusTag s={it.s}/></Space>}
+              extra={<Space><Text type="secondary" className="num" style={{fontSize:12}}>отклик {it.lat}</Text><Button size="small">Проверить соединение</Button></Space>}>
+              {it.s==='degraded' && <Alert type="warning" showIcon style={{marginBottom:12}}
+                message="Повышенное время ответа" description="Средний отклик 2,4 с при норме до 500 мс. Очередь эмбеддингов растёт — обработка новых документов замедлена." />}
+              <Descriptions size="small" column={2} colon={false}
+                items={Object.entries(it.d).map(([k,v],j)=>({ key:j, label:<Text type="secondary" style={{fontSize:12}}>{k}</Text>, children:<Text className={/https?|\d/.test(v)?'mono':''} style={{fontSize:12.5}}>{v}</Text> }))} />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </>
+  );
+};
+
+/* ---- 9. API KEYS ---- */
+const ApiKeysScreen = () => {
+  const { token } = antdTheme.useToken();
+  const [modal, setModal] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <>
+      <PageHead title="API-ключи" desc="Ключи доступа к API портала для внешних систем"
+        extra={<Button type="primary" icon={Icons.plus} onClick={()=>{setModal(true);setRevealed(false);}}>Создать ключ</Button>} />
+      <Card size="small" styles={{ body:{padding:0} }}>
+        <Table size="middle" pagination={false} dataSource={apiKeys} columns={[
+          { title:'Название', dataIndex:'name', render:(v,r)=><Space size={8}>{Icons.key}<Text strong className="mono" style={{fontSize:13}} delete={r.status==='deleted'}>{v}</Text></Space> },
+          { title:'Права', dataIndex:'scopes', render:v=><Space size={4}>{v.map(s=><Tag key={s} style={{marginInlineEnd:0}} color={s==='admin'?'purple':undefined}>{s}</Tag>)}</Space> },
+          { title:'Префикс', dataIndex:'prefix', render:v=><Text type="secondary" className="mono" style={{fontSize:12}}>{v}</Text> },
+          { title:'Создан', dataIndex:'created', width:110, className:'col-num' },
+          { title:'Истекает', dataIndex:'expires', width:110, className:'col-num' },
+          { title:'Использован', dataIndex:'last', width:150, render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+          { title:'Статус', dataIndex:'status', width:120, render:v=><StatusTag s={v==='deleted'?'deleted':'active'}/> },
+          { title:'', key:'a', width:110, render:(_,r)=> r.status!=='deleted' && (
+            <Popconfirm title="Отозвать ключ?" description="Все запросы с этим ключом будут отклоняться немедленно. Действие необратимо."
+              okText="Отозвать" okButtonProps={{danger:true}} cancelText="Отмена">
+              <Button size="small" danger type="text">Отозвать</Button>
+            </Popconfirm>) },
+        ]} />
+      </Card>
+      <Modal title="Новый API-ключ" open={modal} onCancel={()=>setModal(false)}
+        footer={ revealed
+          ? <Button type="primary" onClick={()=>setModal(false)}>Готово, ключ сохранён</Button>
+          : <Space><Button onClick={()=>setModal(false)}>Отмена</Button><Button type="primary" onClick={()=>setRevealed(true)}>Создать ключ</Button></Space> }>
+        {!revealed ? (
+          <Form layout="vertical" style={{marginTop:8}}>
+            <Form.Item label="Название" required><Input placeholder="bi-readonly" className="mono" /></Form.Item>
+            <Form.Item label="Права доступа"><Checkbox.Group options={[{label:'read — чтение',value:'read'},{label:'write — запись',value:'write'},{label:'admin — администрирование',value:'admin'}]} defaultValue={['read']} style={{display:'flex',flexDirection:'column',gap:6}} /></Form.Item>
+            <Form.Item label="Срок действия"><Select defaultValue="365" options={[{value:'90',label:'90 дней'},{value:'365',label:'1 год'},{value:'0',label:'Бессрочно'}]} style={{width:180}} /></Form.Item>
+          </Form>
+        ) : (
+          <>
+            <Alert type="warning" showIcon style={{ margin:'8px 0 16px' }}
+              message="Секрет показывается только один раз"
+              description="Скопируйте ключ сейчас. После закрытия окна восстановить его будет невозможно — только создать новый." />
+            <div style={{ display:'flex', gap:8, alignItems:'center', background:token.colorFillTertiary, border:`1px solid ${token.colorBorder}`, borderRadius:8, padding:'10px 12px' }}>
+              <Text className="mono" style={{ fontSize:13, flex:1 }}>dkp_live_8f3kQ2nVw7ХxP0aLrT5eYbM9cJdU4sHg</Text>
+              <Button size="small" icon={Icons.copy} onClick={()=>message.success('Ключ скопирован в буфер обмена')}>Копировать</Button>
+            </div>
+          </>
+        )}
+      </Modal>
+    </>
+  );
+};
+
+/* ---- 10. PROCESSING JOBS ---- */
+const JobsScreen = () => {
+  const { token } = antdTheme.useToken();
+  return (
+    <>
+      <PageHead title="Обработка" desc="Очередь задач конвейера Dify: загрузка → парсинг → очистка → разбиение → индексация"
+        extra={<><Button icon={Icons.refresh}>Обновить</Button><Button danger>Повторить все сбойные</Button></>} />
+      <PipelineStrip />
+      <div style={{ height:16 }} />
+      <Card size="small" styles={{ body:{padding:0} }}
+        title={<Space wrap><Select size="small" defaultValue="all" style={{minWidth:140}} options={[{value:'all',label:'Все статусы'},...['queued','running','success','failed','skipped'].map(s=>({value:s,label:STATUS[s].label}))]} /><Select size="small" placeholder="Проект" style={{minWidth:130}} options={projects.map(p=>({value:p.code,label:p.code}))} allowClear /></Space>}>
+        <Table size="middle" pagination={false} dataSource={jobs}
+          expandable={{ rowExpandable: r=>!!r.err, expandedRowRender: r=>(
+            <Alert type={r.status==='failed'?'error':'warning'} showIcon message={r.status==='failed'?'Причина сбоя':'Причина пропуска'} description={<Text className="mono" style={{fontSize:12.5}}>{r.err}</Text>} />) }}
+          columns={[
+            { title:'Документ', dataIndex:'doc', render:(v,r)=><><Text strong style={{fontSize:13.5}}>{v}</Text><br/><Text type="secondary" className="mono" style={{fontSize:11.5}}>{r.project}</Text></> },
+            { title:'Этап', dataIndex:'stage', width:140, render:v=><Text style={{fontSize:13}}>{STATUS[v]?.label||v}</Text> },
+            { title:'Статус', dataIndex:'status', width:140, render:v=><StatusTag s={v}/> },
+            { title:'Начало', dataIndex:'started', width:100, className:'col-num', render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+            { title:'Завершение', dataIndex:'finished', width:110, className:'col-num', render:v=><Text type="secondary" className="num" style={{fontSize:12.5}}>{v}</Text> },
+            { title:'', key:'a', width:130, render:(_,r)=> r.status==='failed' && <Button size="small" icon={Icons.refresh}>Повторить</Button> },
+          ]} />
+      </Card>
+    </>
+  );
+};
+
+/* ---- 11. AUDIT LOGS ---- */
+const AuditScreen = () => {
+  const { token } = antdTheme.useToken();
+  const [detail, setDetail] = useState(false);
+  const J = ({k,v,changed,del}) => (
+    <div className={changed?'diff-add-row':''} style={changed?{background: token.colorSuccessBg}:{}}>
+      <span className="jk">"{k}"</span>: <span className={del?'diff-del':''} style={{color: typeof v==='string'? (token.colorPrimary) : token.colorWarning}}>{typeof v==='string'?`"${v}"`:String(v)}</span>{','}
+    </div>
+  );
+  return (
+    <>
+      <PageHead title="Аудит" desc="Журнал всех действий пользователей и системы. Записи неизменяемы."
+        extra={<Button icon={Icons.download}>Экспорт CSV</Button>} />
+      <Card size="small" styles={{ body:{padding:0} }}
+        title={<Space wrap><Input.Search size="small" placeholder="Пользователь или объект" style={{width:220}} /><Select size="small" placeholder="Действие" style={{minWidth:160}} allowClear options={['document.upload','document.reindex','settings.update','apikey.revoke'].map(v=>({value:v,label:v}))} /></Space>}>
+        <Table size="middle" pagination={{pageSize:10,size:'small'}} dataSource={auditRows}
+          onRow={()=>({ onClick:()=>setDetail(true), style:{cursor:'pointer'} })}
+          columns={[
+            { title:'Время', dataIndex:'time', width:150, render:v=><Text className="num" style={{fontSize:12.5}}>{v}</Text> },
+            { title:'Пользователь', dataIndex:'actor', width:170, render:(v,r)=><><Text strong className="mono" style={{fontSize:13}}>{v}</Text><br/><Text type="secondary" style={{fontSize:11.5}}>{r.role}</Text></> },
+            { title:'Действие', dataIndex:'action', width:180, render:v=><Tag className="mono" style={{fontSize:11.5, marginInlineEnd:0}}>{v}</Tag> },
+            { title:'Объект', dataIndex:'entity', render:v=><Text style={{fontSize:13}}>{v}</Text> },
+          ]} />
+      </Card>
+      <Drawer title={<Space>Событие аудита <Tag className="mono" style={{fontSize:11}}>settings.update</Tag></Space>} width={560} open={detail} onClose={()=>setDetail(false)}>
+        <Descriptions size="small" column={2} style={{marginBottom:20}} items={[
+          {key:1,label:'Пользователь',children:<Text className="mono">a.serikova</Text>},
+          {key:2,label:'Роль',children:'Администратор'},
+          {key:3,label:'Время',children:<Text className="num">08.07.2026 17:50:12</Text>},
+          {key:4,label:'IP',children:<Text className="mono">10.4.2.117</Text>},
+        ]} />
+        <Text strong style={{fontSize:13}}>Изменения (до → после)</Text>
+        <Row gutter={12} style={{marginTop:10}}>
+          <Col span={12}>
+            <Text type="secondary" style={{fontSize:11.5, textTransform:'uppercase', letterSpacing:.5}}>До</Text>
+            <div className="json-view" style={{ background: token.colorFillTertiary, border:`1px solid ${token.colorBorderSecondary}`, marginTop:6 }}>
+              {'{'}<div style={{paddingLeft:14}}>
+                <J k="api_url" v="https://dify.local/v1" del />
+                <J k="timeout_ms" v={30000} />
+                <J k="retry" v={2} del />
+              </div>{'}'}
+            </div>
+          </Col>
+          <Col span={12}>
+            <Text type="secondary" style={{fontSize:11.5, textTransform:'uppercase', letterSpacing:.5}}>После</Text>
+            <div className="json-view" style={{ background: token.colorFillTertiary, border:`1px solid ${token.colorBorderSecondary}`, marginTop:6 }}>
+              {'{'}<div style={{paddingLeft:14}}>
+                <J k="api_url" v="https://dify.internal/v1" changed />
+                <J k="timeout_ms" v={30000} />
+                <J k="retry" v={3} changed />
+              </div>{'}'}
+            </div>
+          </Col>
+        </Row>
+      </Drawer>
+    </>
+  );
+};
+
+/* ---- 12. SETTINGS ---- */
+const SettingsScreen = () => {
+  const { token } = antdTheme.useToken();
+  const group = (fields, health) => (
+    <div style={{ maxWidth:560 }}>
+      <Form layout="vertical" size="middle">
+        {fields.map((f,i)=>(
+          <Form.Item key={i} label={f.l} tooltip={f.tip} style={{marginBottom:14}}>
+            {f.t==='switch' && <Switch defaultChecked={f.v} />}
+            {f.t==='num' && <InputNumber defaultValue={f.v} style={{width:160}} addonAfter={f.suf} />}
+            {f.t==='text' && <Input defaultValue={f.v} className={f.mono?'mono':''} />}
+            {f.t==='secret' && <Input.Password placeholder="•••••••• (оставьте пустым, чтобы не менять)" />}
+          </Form.Item>
+        ))}
+      </Form>
+      <Space align="center" wrap>
+        <Button icon={Icons.plug}>Проверить соединение</Button>
+        {health && <Alert type={health.t} showIcon style={{padding:'4px 10px'}}
+          message={<Space size={8}><span>{health.m}</span><Text type="secondary" className="num" style={{fontSize:12}}>{health.lat}</Text></Space>} />}
+      </Space>
+    </div>
+  );
+  return (
+    <>
+      <PageHead title="Настройки" desc="Конфигурация системы · доступно только администраторам"
+        extra={<Tag color="purple" style={{marginInlineEnd:0}}>Только Admin</Tag>} />
+      <Alert type="info" showIcon style={{ marginBottom:16 }}
+        message="Секреты хранятся в зашифрованном виде"
+        description="Значения на этой странице переопределяют переменные из .env и применяются немедленно, без перезапуска сервисов." />
+      <Card size="small" styles={{ body:{padding:0} }}>
+        <Collapse defaultActiveKey={['dify']} bordered={false} items={[
+          { key:'s3', label:<Text strong>S3 — хранилище оригиналов</Text>, children: group([
+            { l:'Endpoint', t:'text', v:'https://s3.internal:9000', mono:true },
+            { l:'Bucket', t:'text', v:'dkp-originals', mono:true },
+            { l:'Access Key ID', t:'text', v:'DKPPORTAL01', mono:true },
+            { l:'Secret Access Key', t:'secret' },
+            { l:'Presigned URL: время жизни', t:'num', v:15, suf:'мин' },
+          ], { t:'success', m:'Соединение установлено', lat:'12 мс' }) },
+          { key:'dify', label:<Text strong>Dify — RAG-конвейер</Text>, children: group([
+            { l:'API URL', t:'text', v:'https://dify.internal/v1', mono:true },
+            { l:'API-ключ', t:'secret', tip:'Ключ сервисного аккаунта Dify с правом управления датасетами' },
+            { l:'Автоматически создавать датасеты', t:'switch', v:true },
+            { l:'Таймаут запроса', t:'num', v:30, suf:'с' },
+          ], { t:'success', m:'Соединение установлено', lat:'84 мс' }) },
+          { key:'lm', label:<Text strong>LM Studio — эмбеддинги</Text>, children: group([
+            { l:'Endpoint', t:'text', v:'http://10.4.0.12:1234', mono:true },
+            { l:'Модель', t:'text', v:'bge-m3', mono:true },
+            { l:'Размер пакета (batch)', t:'num', v:32 },
+          ], { t:'warning', m:'Деградация: отклик выше нормы', lat:'2,4 с' }) },
+          { key:'qdrant', label:<Text strong>Qdrant — векторное хранилище</Text>, children: group([
+            { l:'Endpoint', t:'text', v:'http://qdrant.internal:6333', mono:true },
+            { l:'API-ключ', t:'secret' },
+          ], { t:'success', m:'Соединение установлено', lat:'9 мс' }) },
+          { key:'proc', label:<Text strong>Обработка</Text>, children: group([
+            { l:'Параллельных задач', t:'num', v:4 },
+            { l:'Повторов при сбое', t:'num', v:3 },
+            { l:'Ставить архивные документы в очередь', t:'switch', v:false },
+          ]) },
+          { key:'sec', label:<Text strong>Безопасность</Text>, children: group([
+            { l:'Время сессии', t:'num', v:8, suf:'ч' },
+            { l:'Требовать 2FA для администраторов', t:'switch', v:true },
+            { l:'Блокировка после неудачных входов', t:'num', v:5, suf:'попыток' },
+          ]) },
+        ]} />
+      </Card>
+    </>
+  );
+};
+
+/* ---- 13. STATUS LEGEND / DESIGN SYSTEM BOARD ---- */
+const LegendScreen = ({ dark }) => {
+  const { token } = antdTheme.useToken();
+  const Sw = ({c, n, d}) => (
+    <div className="swatch" style={{'--sw-border': token.colorBorderSecondary}}>
+      <div className="swatch-c" style={{ background:c }} />
+      <div className="swatch-t"><b>{n}</b><br/><span className="mono" style={{color:token.colorTextTertiary}}>{c}</span>{d && <><br/><span style={{color:token.colorTextTertiary}}>{d}</span></>}</div>
+    </div>
+  );
+  const groupOf = (keys) => <Space wrap size={8}>{keys.map(k=><StatusTag s={k} key={k}/>)}</Space>;
+  return (
+    <>
+      <PageHead title="Дизайн-система" desc="Токены, статусы и базовые состояния — единый язык всех 14 экранов" />
+      <Space direction="vertical" size={16} style={{width:'100%'}}>
+        <Card size="small" title="Палитра">
+          <div className="swatch-row">
+            <Sw c={token.colorPrimary} n="Primary" d="действия, ссылки" />
+            <Sw c={token.colorSuccess} n="Success" d="завершено, ок" />
+            <Sw c={token.colorWarning} n="Warning" d="деградация" />
+            <Sw c={token.colorError} n="Error" d="сбой, ошибка" />
+            <Sw c={token.colorText} n="Text" />
+            <Sw c={token.colorTextSecondary} n="Text 2" />
+            <Sw c={token.colorBgLayout} n="Bg layout" />
+            <Sw c={token.colorBgContainer} n="Bg container" />
+            <Sw c={token.colorBorder} n="Border" />
+          </div>
+        </Card>
+        <Card size="small" title="Статусы — документ и пайплайн Dify">
+          {groupOf(['queued','uploading','waiting','parsing','cleaning','splitting','indexing','completed','error','archived','disabled'])}
+          <Divider style={{margin:'12px 0'}} />
+          <Text type="secondary" style={{fontSize:12.5}}>Портальные статусы документа:</Text><br/>
+          <div style={{marginTop:8}}>{groupOf(['draft','active','stored','indexed','deleted'])}</div>
+        </Card>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Card size="small" title="Статусы — задачи обработки">{groupOf(['queued','running','success','failed','skipped'])}</Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <Card size="small" title="Статусы — интеграции">{groupOf(['ok','degraded','down','setup_required'])}</Card>
+          </Col>
+        </Row>
+        <Card size="small" title="Типографика — Inter (кириллица) + IBM Plex Mono">
+          <Space direction="vertical" size={2}>
+            <span style={{fontSize:30,fontWeight:600}}>Заголовок H1 · 30/38 · 600</span>
+            <span style={{fontSize:24,fontWeight:600}}>Заголовок H2 · 24/32 · 600</span>
+            <span style={{fontSize:20,fontWeight:600}}>Заголовок H3 · 20/28 · 600</span>
+            <span style={{fontSize:16,fontWeight:600}}>Заголовок H4 · 16/24 · 600</span>
+            <span style={{fontSize:14}}>Основной текст · 14/22 · 400 — Съешь ещё этих мягких французских булок, да выпей чаю.</span>
+            <span style={{fontSize:12, color:token.colorTextSecondary}}>Подпись · 12/20 · 400 — вторичный текст, метаданные таблиц</span>
+            <span className="mono num">Моно / табличные цифры · 84 316 200 ₸ · dkp_live_8f3k… · 08.07.2026 17:42</span>
+          </Space>
+        </Card>
+        <Row gutter={16}>
+          <Col xs={24} md={8}>
+            <Card size="small" title="Состояние: загрузка"><Skeleton active paragraph={{rows:3}} /></Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" title="Состояние: пусто"><Empty description="В этой папке пока нет документов"><Button type="primary" size="small" icon={Icons.upload}>Загрузить первый</Button></Empty></Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" title="Состояние: ошибка"><ErrorAlert onRetry={()=>{}} /></Card>
+          </Col>
+        </Row>
+        <Card size="small" title="Отступы и радиусы">
+          <Text type="secondary" style={{fontSize:13}}>База 4px · компоненты 8/12/16 · гуттер страницы 24 · радиусы 4 / 6 / 10 · тени двух уровней (карточка / всплывающий слой) · движение 100–240 мс, ease-out.</Text>
+        </Card>
+      </Space>
+    </>
+  );
+};
+
+/* ================================================================
+   7. APP SHELL + ROUTER
+   ================================================================ */
+const SCREENS = {
+  dashboard: { title:'Дашборд', icon:'dashboard', el:()=><DashboardScreen/> },
+  projects:  { title:'Проекты', icon:'projects', el:()=><ProjectsScreen/> },
+  project:   { title:'ЖК «Туран»', icon:null, el:()=><ProjectDetailScreen/>, crumb:['Проекты','ЖК «Туран»'] },
+  search:    { title:'Поиск', icon:'search', el:()=><SearchScreen/> },
+  documents: { title:'Документы', icon:'docs', el:()=><DocumentsScreen/> },
+  departments:{ title:'Отделы', icon:'depts', el:()=><DepartmentsScreen/> },
+  datasets:  { title:'Dify Datasets', icon:'dataset', el:()=><DatasetsScreen/> },
+  integrations:{ title:'Интеграции', icon:'plug', el:()=><IntegrationsScreen/> },
+  apikeys:   { title:'API-ключи', icon:'key', el:()=><ApiKeysScreen/> },
+  jobs:      { title:'Обработка', icon:'queue', el:()=><JobsScreen/> },
+  audit:     { title:'Аудит', icon:'audit', el:()=><AuditScreen/> },
+  settings:  { title:'Настройки', icon:'gear2', el:()=><SettingsScreen/> },
+  legend:    { title:'Дизайн-система', icon:'palette', el:(d)=><LegendScreen dark={d}/> },
+};
+
+const menuItems = [
+  ...['dashboard','projects','search','documents','departments','datasets','integrations','apikeys','jobs','audit','settings']
+    .map(k=>({ key:k, icon:Icons[SCREENS[k].icon], label:SCREENS[k].title })),
+  { type:'divider' },
+  { key:'project', icon:Icons.folder, label:'→ Экран проекта' },
+  { key:'legend', icon:Icons.palette, label:'→ Дизайн-система' },
+  { key:'login', icon:Icons.door, label:'→ Экран входа' },
+];
+
+const App = () => {
+  const [dark, setDark] = useState(false);
+  const [screen, setScreen] = useState('dashboard');
+  const [collapsed, setCollapsed] = useState(false);
+  const themeCfg = dark ? darkTheme : lightTheme;
+
+  return (
+    <ConfigProvider theme={themeCfg}>
+      <SpinKeyframes />
+      {screen === 'login' ? (
+        <div>
+          <LoginScreen dark={dark} onEnter={()=>setScreen('dashboard')} />
+          <div style={{ position:'fixed', top:16, right:16, zIndex:10 }}>
+            <Button size="small" onClick={()=>setScreen('dashboard')}>← Назад в приложение</Button>
+          </div>
+        </div>
+      ) : (
+        <Layout style={{ minHeight:'100vh' }}>
+          <Sider width={228} collapsible collapsed={collapsed} onCollapse={setCollapsed}
+            breakpoint="lg" collapsedWidth={64} theme="dark">
+            <div className="dkp-logo" style={ collapsed ? {padding:'16px 0', justifyContent:'center'} : {} }>
+              <div className="dkp-logo-mark">{Icons.cloud}</div>
+              {!collapsed && <div><div className="dkp-logo-text">DKP</div><div className="dkp-logo-sub">Knowledge Portal</div></div>}
+            </div>
+            <Menu theme="dark" mode="inline" selectedKeys={[screen]} items={menuItems}
+              onSelect={({key})=>setScreen(key)} style={{ border:'none' }} />
+          </Sider>
+          <Layout>
+            <ShellHeader dark={dark} setDark={setDark} screen={screen} />
+            <Content style={{ padding:24, maxWidth:1560, width:'100%', margin:'0 auto' }}>
+              {SCREENS[screen].el(dark)}
+            </Content>
+          </Layout>
+        </Layout>
+      )}
+    </ConfigProvider>
+  );
+};
+
+const ShellHeader = ({ dark, setDark, screen }) => {
+  const { token } = antdTheme.useToken();
+  const s = SCREENS[screen];
+  const crumbs = (s.crumb || [s.title]).map(t=>({ title:t }));
+  return (
+    <Header style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+      borderBottom:`1px solid ${token.colorBorderSecondary}`, position:'sticky', top:0, zIndex:5 }}>
+      <Breadcrumb items={[{ title:'DKP' }, ...crumbs]} />
+      <Space size={14}>
+        <Input placeholder="Глобальный поиск…  ( / )" prefix={<span style={{color:token.colorTextTertiary}}>{Icons.search}</span>}
+          size="small" style={{ width:220 }} variant="filled" />
+        <Tooltip title={dark ? 'Светлая тема' : 'Тёмная тема'}>
+          <Switch checked={dark} onChange={setDark}
+            checkedChildren={Icons.moon} unCheckedChildren={Icons.sun} />
+        </Tooltip>
+        <Dropdown menu={{ items:[
+          { key:'p', label:'Профиль' },
+          { key:'t', label:'Мои токены' },
+          { type:'divider' },
+          { key:'q', label:<Space size={8}>{Icons.door}Выход</Space>, danger:true },
+        ]}}>
+          <Space style={{ cursor:'pointer' }} size={10}>
+            <Avatar size={30} style={{ background:'#2F54EB', fontWeight:600, fontSize:12 }}>АС</Avatar>
+            <div style={{ lineHeight:1.2, textAlign:'left' }}>
+              <div style={{ fontSize:13, fontWeight:600, color:token.colorText }}>А. Серикова</div>
+              <div style={{ fontSize:11, color:token.colorTextTertiary }}>Администратор</div>
+            </div>
+          </Space>
+        </Dropdown>
+      </Space>
+    </Header>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

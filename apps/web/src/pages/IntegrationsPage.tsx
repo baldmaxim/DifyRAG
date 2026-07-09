@@ -1,15 +1,18 @@
-import { ReloadOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Button, Card, Col, Descriptions, Row, Skeleton, Typography } from 'antd';
 import { integrationsApi } from '../api/endpoints';
+import { Icons } from '../components/icons';
+import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 import type { HealthResult } from '../types';
 
+const { Text } = Typography;
+
 const LABELS: Record<string, string> = {
-  dify: 'Dify (RAG-движок)',
-  lmstudio: 'LM Studio (embeddings)',
-  qdrant: 'Qdrant (vector store)',
-  s3: 'Cloud.ru S3',
+  dify: 'Dify — RAG-движок',
+  lmstudio: 'LM Studio — эмбеддинги',
+  qdrant: 'Qdrant — векторное хранилище',
+  s3: 'Cloud.ru S3 — оригиналы',
 };
 
 export function IntegrationsPage(): React.ReactElement {
@@ -22,16 +25,23 @@ export function IntegrationsPage(): React.ReactElement {
 
   return (
     <>
-      <Typography.Title level={3}>
-        Интеграции{' '}
-        <Button icon={<ReloadOutlined />} loading={isFetching} onClick={() => void refetch()}>
-          Проверить
-        </Button>
-      </Typography.Title>
+      <PageHead
+        title="Интеграции"
+        desc="Состояние внешних сервисов конвейера обработки"
+        extra={
+          <Button icon={Icons.refresh} loading={isFetching} onClick={() => void refetch()}>
+            Проверить
+          </Button>
+        }
+      />
       <Row gutter={[16, 16]}>
         {(data ?? []).map((h: HealthResult) => (
           <Col xs={24} md={12} key={h.provider}>
-            <Card title={LABELS[h.provider] ?? h.provider} extra={<StatusTag status={h.status} />}>
+            <Card
+              size="small"
+              title={LABELS[h.provider] ?? h.provider}
+              extra={<StatusTag status={h.status} />}
+            >
               {h.provider === 'qdrant' && (
                 <Alert
                   type="info"
@@ -41,10 +51,14 @@ export function IntegrationsPage(): React.ReactElement {
                 />
               )}
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="Latency">{h.latencyMs ?? '—'} ms</Descriptions.Item>
+                <Descriptions.Item label="Задержка">
+                  <Text className="num">{h.latencyMs ?? '—'} мс</Text>
+                </Descriptions.Item>
                 {Object.entries(h.details).map(([k, v]) => (
                   <Descriptions.Item key={k} label={k}>
-                    {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                    <Text className="mono" style={{ fontSize: 12 }}>
+                      {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                    </Text>
                   </Descriptions.Item>
                 ))}
               </Descriptions>

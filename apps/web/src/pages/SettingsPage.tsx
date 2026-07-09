@@ -3,6 +3,7 @@ import {
   App as AntApp,
   Alert,
   Button,
+  Card,
   Collapse,
   Form,
   Input,
@@ -16,8 +17,12 @@ import {
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { settingsApi } from '../api/endpoints';
+import { Icons } from '../components/icons';
+import { PageHead } from '../components/PageHead';
+import { StatusTag } from '../components/StatusTag';
 import type { HealthResult, MaskedSettingField, MaskedSettingGroup } from '../types';
 
+const { Text } = Typography;
 const TESTABLE = new Set(['s3', 'dify', 'lmStudio', 'qdrant']);
 
 function FieldItem({ f }: { f: MaskedSettingField }): React.ReactElement {
@@ -48,7 +53,7 @@ function FieldItem({ f }: { f: MaskedSettingField }): React.ReactElement {
   }
   return (
     <Form.Item name={f.field} label={f.label}>
-      <Input />
+      <Input className="mono" />
     </Form.Item>
   );
 }
@@ -68,7 +73,6 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): React.ReactElement
   const saveMutation = useMutation({
     mutationFn: (values: Record<string, unknown>) => {
       const patch: Record<string, unknown> = { ...values };
-      // Do not send empty secret fields — that would keep the existing value.
       for (const f of group.fields) {
         if (f.secret && !patch[f.field]) delete patch[f.field];
       }
@@ -105,11 +109,19 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): React.ReactElement
           type={testResult.status === 'ok' ? 'success' : testResult.status === 'degraded' ? 'warning' : 'error'}
           message={
             <Space>
-              Проверка: <Tag>{testResult.status}</Tag>
-              {testResult.latencyMs != null && <span>{testResult.latencyMs} ms</span>}
+              <StatusTag status={testResult.status} />
+              {testResult.latencyMs != null && (
+                <Text type="secondary" className="num">
+                  {testResult.latencyMs} мс
+                </Text>
+              )}
             </Space>
           }
-          description={<pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{JSON.stringify(testResult.details, null, 2)}</pre>}
+          description={
+            <pre className="mono" style={{ margin: 0, whiteSpace: 'pre-wrap', fontSize: 12 }}>
+              {JSON.stringify(testResult.details, null, 2)}
+            </pre>
+          }
         />
       )}
       <Space>
@@ -117,7 +129,7 @@ function GroupForm({ group }: { group: MaskedSettingGroup }): React.ReactElement
           Сохранить
         </Button>
         {TESTABLE.has(group.group) && (
-          <Button loading={testMutation.isPending} onClick={() => testMutation.mutate()}>
+          <Button icon={Icons.plug} loading={testMutation.isPending} onClick={() => testMutation.mutate()}>
             Проверить соединение
           </Button>
         )}
@@ -130,25 +142,41 @@ export function SettingsPage(): React.ReactElement {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['settings'], queryFn: settingsApi.list });
 
   if (isLoading) return <Skeleton active />;
-  if (isError) return <Alert type="error" message={apiErrorMessage(error, 'Нет доступа к настройкам (нужна роль admin)')} />;
+  if (isError) {
+    return (
+      <>
+        <PageHead title="Настройки" />
+        <Alert type="error" showIcon message={apiErrorMessage(error, 'Нет доступа к настройкам (нужна роль admin)')} />
+      </>
+    );
+  }
 
   return (
     <>
-      <Typography.Title level={3}>Настройки</Typography.Title>
+      <PageHead
+        title="Настройки"
+        desc="Конфигурация системы · доступно только администраторам"
+        extra={<Tag color="purple" style={{ marginInlineEnd: 0 }}>Только Admin</Tag>}
+      />
       <Alert
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="Настройки хранятся в БД и переопределяют .env. Секреты шифруются и не отображаются. Применяются сразу."
+        message="Секреты хранятся в зашифрованном виде"
+        description="Значения переопределяют переменные из .env и применяются немедленно, без перезапуска сервисов."
       />
-      <Collapse
-        accordion
-        items={(data ?? []).map((g) => ({
-          key: g.group,
-          label: g.label,
-          children: <GroupForm group={g} />,
-        }))}
-      />
+      <Card size="small" styles={{ body: { padding: 0 } }}>
+        <Collapse
+          accordion
+          bordered={false}
+          defaultActiveKey={data?.[0]?.group}
+          items={(data ?? []).map((g) => ({
+            key: g.group,
+            label: <Text strong>{g.label}</Text>,
+            children: <GroupForm group={g} />,
+          }))}
+        />
+      </Card>
     </>
   );
 }

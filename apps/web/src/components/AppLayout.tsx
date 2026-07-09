@@ -1,56 +1,51 @@
-import {
-  ApiOutlined,
-  AppstoreOutlined,
-  AuditOutlined,
-  BulbFilled,
-  BulbOutlined,
-  CloudServerOutlined,
-  DashboardOutlined,
-  DatabaseOutlined,
-  DeploymentUnitOutlined,
-  FileTextOutlined,
-  LogoutOutlined,
-  SearchOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  ThunderboltOutlined,
-} from '@ant-design/icons';
-import { Button, Dropdown, Layout, Menu, Space, Tooltip, Typography } from 'antd';
-import { useMemo } from 'react';
+import { Avatar, Breadcrumb, Dropdown, Input, Layout, Menu, Space, Switch, Tooltip, Typography, theme as antdTheme } from 'antd';
+import { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/endpoints';
 import { useAuthStore } from '../stores/auth.store';
 import { useThemeStore } from '../stores/theme.store';
+import { Icons } from './icons';
 
 const { Header, Sider, Content } = Layout;
 
-const MENU = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'Дашборд' },
-  { key: '/projects', icon: <AppstoreOutlined />, label: 'Проекты' },
-  { key: '/search', icon: <SearchOutlined />, label: 'Поиск' },
-  { key: '/documents', icon: <FileTextOutlined />, label: 'Документы' },
-  { key: '/departments', icon: <TeamOutlined />, label: 'Отделы' },
-  { key: '/dify-datasets', icon: <DatabaseOutlined />, label: 'Dify Datasets' },
-  { key: '/integrations', icon: <DeploymentUnitOutlined />, label: 'Интеграции' },
-  { key: '/api-keys', icon: <ApiOutlined />, label: 'API-ключи' },
-  { key: '/processing-jobs', icon: <ThunderboltOutlined />, label: 'Обработка' },
-  { key: '/audit-logs', icon: <AuditOutlined />, label: 'Аудит' },
-  { key: '/settings', icon: <SettingOutlined />, label: 'Настройки' },
+interface NavItem {
+  key: string;
+  icon: string;
+  label: string;
+}
+
+const MENU: NavItem[] = [
+  { key: '/dashboard', icon: 'dashboard', label: 'Дашборд' },
+  { key: '/projects', icon: 'projects', label: 'Проекты' },
+  { key: '/search', icon: 'search', label: 'Поиск' },
+  { key: '/documents', icon: 'docs', label: 'Документы' },
+  { key: '/departments', icon: 'depts', label: 'Отделы' },
+  { key: '/dify-datasets', icon: 'dataset', label: 'Dify Datasets' },
+  { key: '/integrations', icon: 'plug', label: 'Интеграции' },
+  { key: '/api-keys', icon: 'key', label: 'API-ключи' },
+  { key: '/processing-jobs', icon: 'queue', label: 'Обработка' },
+  { key: '/audit-logs', icon: 'audit', label: 'Аудит' },
+  { key: '/settings', icon: 'gear2', label: 'Настройки' },
 ];
+
+function initials(name?: string, email?: string): string {
+  const src = (name ?? email ?? '?').trim();
+  const parts = src.split(/[\s.@]+/).filter(Boolean);
+  return (parts.slice(0, 2).map((p) => p[0]).join('') || '?').toUpperCase();
+}
 
 export function AppLayout(): React.ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
+  const { token } = antdTheme.useToken();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const refreshToken = useAuthStore((s) => s.refreshToken);
   const mode = useThemeStore((s) => s.mode);
   const toggleTheme = useThemeStore((s) => s.toggle);
+  const [collapsed, setCollapsed] = useState(false);
 
-  const selectedKey = useMemo(() => {
-    const match = MENU.find((m) => location.pathname.startsWith(m.key));
-    return match?.key ?? '/dashboard';
-  }, [location.pathname]);
+  const current = useMemo(() => MENU.find((m) => location.pathname.startsWith(m.key)) ?? MENU[0], [location.pathname]);
 
   const onLogout = async (): Promise<void> => {
     if (refreshToken) {
@@ -62,43 +57,102 @@ export function AppLayout(): React.ReactElement {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider breakpoint="lg" collapsedWidth="0" theme="dark">
-        <div style={{ height: 48, margin: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CloudServerOutlined style={{ color: '#fff', fontSize: 22 }} />
-          <span style={{ color: '#fff', fontWeight: 600 }}>DKP</span>
+      <Sider
+        width={228}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        breakpoint="lg"
+        collapsedWidth={64}
+        theme="dark"
+      >
+        <div className="dkp-logo" style={collapsed ? { padding: '16px 0', justifyContent: 'center' } : undefined}>
+          <div className="dkp-logo-mark">{Icons.cloud}</div>
+          {!collapsed && (
+            <div>
+              <div className="dkp-logo-text">DKP</div>
+              <div className="dkp-logo-sub">Knowledge Portal</div>
+            </div>
+          )}
         </div>
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[selectedKey]}
-          items={MENU}
+          style={{ border: 'none' }}
+          selectedKeys={[current.key]}
+          items={MENU.map((m) => ({ key: m.key, icon: Icons[m.icon], label: m.label }))}
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
       <Layout>
-        <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-          <Space size="middle">
+        <Header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            position: 'sticky',
+            top: 0,
+            zIndex: 5,
+          }}
+        >
+          <Breadcrumb items={[{ title: 'DKP' }, { title: current.label }]} />
+          <Space size={14}>
+            <Input
+              placeholder="Глобальный поиск…  ( / )"
+              prefix={<span style={{ color: token.colorTextTertiary }}>{Icons.search}</span>}
+              size="small"
+              variant="filled"
+              style={{ width: 220 }}
+              onPressEnter={(e) => {
+                const q = (e.target as HTMLInputElement).value.trim();
+                navigate(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+              }}
+            />
             <Tooltip title={mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}>
-              <Button
-                type="text"
-                aria-label="Переключить тему"
-                icon={mode === 'dark' ? <BulbFilled /> : <BulbOutlined />}
-                onClick={toggleTheme}
+              <Switch
+                checked={mode === 'dark'}
+                onChange={toggleTheme}
+                checkedChildren={Icons.moon}
+                unCheckedChildren={Icons.sun}
               />
             </Tooltip>
             <Dropdown
               menu={{
-                items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'Выйти', onClick: onLogout }],
+                items: [
+                  { key: 'role', label: `Роль: ${user?.role ?? '—'}`, disabled: true },
+                  { type: 'divider' },
+                  {
+                    key: 'logout',
+                    danger: true,
+                    label: (
+                      <Space size={8}>
+                        {Icons.door}
+                        Выход
+                      </Space>
+                    ),
+                    onClick: onLogout,
+                  },
+                ],
               }}
             >
-              <Space style={{ cursor: 'pointer' }}>
-                <Typography.Text strong>{user?.fullName ?? user?.email ?? 'Пользователь'}</Typography.Text>
-                <Typography.Text type="secondary">({user?.role})</Typography.Text>
+              <Space style={{ cursor: 'pointer' }} size={10}>
+                <Avatar size={30} style={{ background: token.colorPrimary, fontWeight: 600, fontSize: 12 }}>
+                  {initials(user?.fullName, user?.email)}
+                </Avatar>
+                <div style={{ lineHeight: 1.2, textAlign: 'left' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: token.colorText }}>
+                    {user?.fullName ?? user?.email ?? 'Пользователь'}
+                  </div>
+                  <Typography.Text style={{ fontSize: 11, color: token.colorTextTertiary }}>
+                    {user?.role}
+                  </Typography.Text>
+                </div>
               </Space>
             </Dropdown>
           </Space>
         </Header>
-        <Content style={{ margin: 24 }}>
+        <Content style={{ padding: 24, maxWidth: 1560, width: '100%', margin: '0 auto' }}>
           <Outlet />
         </Content>
       </Layout>

@@ -1,9 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App as AntApp, Button, Card, Col, Drawer, Form, Input, Row } from 'antd';
+import { App as AntApp, Button, Card, Col, Drawer, Form, Input, Row, Skeleton, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { departmentsApi } from '../api/endpoints';
+import { Icons } from '../components/icons';
+import { PageHead } from '../components/PageHead';
+import { RowActions } from '../components/RowActions';
 import type { Department } from '../types';
+
+const { Text, Paragraph } = Typography;
 
 export function DepartmentsPage(): React.ReactElement {
   const queryClient = useQueryClient();
@@ -31,21 +36,51 @@ export function DepartmentsPage(): React.ReactElement {
 
   return (
     <>
-      <Row gutter={[16, 16]}>
-        {(data ?? []).map((dep) => (
-          <Col xs={24} md={8} key={dep.id}>
-            <Card
-              title={dep.name}
-              loading={isLoading}
-              extra={<Button size="small" onClick={() => openEdit(dep)}>Изменить</Button>}
-            >
-              {dep.description ?? 'Нет описания'}
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <PageHead title="Отделы" desc="Подразделения компании и их компетенции (skills.md)" />
+      {isLoading ? (
+        <Skeleton active />
+      ) : (
+        <Row gutter={[16, 16]}>
+          {(data ?? []).map((dep) => (
+            <Col xs={24} md={12} xl={8} key={dep.id}>
+              <Card
+                size="small"
+                title={
+                  <Space size={8}>
+                    {Icons.depts}
+                    {dep.name}
+                  </Space>
+                }
+                extra={<RowActions items={[{ icon: 'edit', tip: 'Изменить', onClick: () => openEdit(dep) }]} />}
+              >
+                <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 8 }} ellipsis={{ rows: 2 }}>
+                  {dep.description ?? 'Нет описания'}
+                </Paragraph>
+                {dep.skillsMarkdown && (
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {Icons.docs} компетенции заданы
+                  </Text>
+                )}
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
 
-      <Drawer title={editing?.name} open={Boolean(editing)} onClose={() => setEditing(null)} width={520}>
+      <Drawer
+        title={editing?.name}
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        width={560}
+        footer={
+          <Space style={{ float: 'right' }}>
+            <Button onClick={() => setEditing(null)}>Отмена</Button>
+            <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+              Сохранить
+            </Button>
+          </Space>
+        }
+      >
         <Form form={form} layout="vertical" onFinish={(v) => saveMutation.mutate(v)}>
           <Form.Item name="name" label="Название" rules={[{ required: true }]}>
             <Input />
@@ -54,11 +89,8 @@ export function DepartmentsPage(): React.ReactElement {
             <Input.TextArea rows={2} />
           </Form.Item>
           <Form.Item name="skillsMarkdown" label="Компетенции (markdown)">
-            <Input.TextArea rows={8} />
+            <Input.TextArea rows={10} className="mono" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>
-            Сохранить
-          </Button>
         </Form>
       </Drawer>
     </>
