@@ -67,4 +67,5 @@ export const Icons: Record<string, ReactElement> = {
   trash: <I d={P(['M3 6h18', 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', 'M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6', 'M10 11v6', 'M14 11v6'])} size={14} />,
   restore: <I d={P(['M3 3v6h6', 'M3.5 9a9 9 0 1 0 2.1-3.4L3 9'])} size={14} />,
   cloud: <I d={P(['M18 10h-1.3A7 7 0 1 0 6 17h12a4 4 0 0 0 0-8z'])} size={18} />,
+  panel: <I d={P(['M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z', 'M9 4v16'])} size={18} />,
 };

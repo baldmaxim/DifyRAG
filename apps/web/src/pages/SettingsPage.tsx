@@ -20,7 +20,6 @@ import { useState, type ReactElement } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { integrationsApi, settingsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 import type { HealthResult, MaskedSettingField, MaskedSettingGroup } from '../types';
 
@@ -291,10 +290,6 @@ export function SettingsPage(): ReactElement {
 
   return (
     <>
-      <PageHead
-        title="Настройки"
-        desc="Хранятся в БД и переопределяют .env. Секреты шифруются и не отображаются. Применяются сразу."
-      />
       <Tabs
         tabPosition="left"
         items={(data ?? []).map((g) => {

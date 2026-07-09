@@ -77,18 +77,19 @@ export function ProjectDetailPage(): React.ReactElement {
   return (
     <>
       <PageHead
-        title={
-          <Space size={10}>
-            {project?.name ?? 'Проект'}
+        desc={
+          <Space size={10} wrap>
+            <span style={{ fontWeight: 600 }}>{project?.name ?? 'Проект'}</span>
             {project?.code && (
               <Tag className="mono" style={{ marginInlineEnd: 0 }}>
                 {project.code}
               </Tag>
             )}
             {project?.status && <StatusTag status={project.status} />}
+            <span>·</span>
+            <span>{selectedName ? `Папка: ${selectedName}` : 'Выберите папку слева'}</span>
           </Space>
         }
-        desc={selectedName ? `Папка: ${selectedName}` : 'Выберите папку слева'}
         extra={
           <>
             <Button icon={Icons.refresh} onClick={() => void queryClient.invalidateQueries({ queryKey: ['documents'] })}>

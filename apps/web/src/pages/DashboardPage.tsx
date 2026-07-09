@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Avatar, Card, Col, Empty, List, Row, Skeleton, Space, Statistic, Typography, theme as antdTheme } from 'antd';
 import { integrationsApi, reportingApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 
 const { Text } = Typography;
@@ -40,14 +39,15 @@ function PipelineStrip({ byStatus }: { byStatus: Record<string, number> }): Reac
         {stages.map((s, i) => (
           <div
             key={i}
-            className="pipe-stage"
+            className="pipe-stage t-rise"
             style={{
               background: token.colorBgContainer,
               borderTop: `1px solid ${token.colorBorderSecondary}`,
               borderBottom: `1px solid ${token.colorBorderSecondary}`,
-            }}
+              '--i': i,
+            } as React.CSSProperties}
           >
-            <div className="pipe-count" style={{ color: s.col }}>
+            <div className="pipe-count t-num" style={{ color: s.col, '--i': i } as React.CSSProperties}>
               {sum(s.keys)}
             </div>
             <div className="pipe-label" style={{ color: token.colorTextTertiary }}>
@@ -84,11 +84,10 @@ export function DashboardPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Дашборд" desc="Состояние хранилища, конвейера обработки и интеграций" />
       <Row gutter={[16, 16]}>
         {kpi.map((k, i) => (
-          <Col xs={12} md={8} xl={5} flex="1 1 180px" key={i}>
-            <Card size="small" className="kpi-card">
+          <Col xs={12} md={8} xl={5} flex="1 1 180px" key={i} className="t-rise" style={{ '--i': i } as React.CSSProperties}>
+            <Card size="small" className="kpi-card t-lift">
               <Statistic
                 title={k.t}
                 value={k.v}
@@ -114,8 +113,8 @@ export function DashboardPage(): React.ReactElement {
               size="small"
               dataSource={data.recentDocuments}
               locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пусто" /> }}
-              renderItem={(d) => (
-                <List.Item style={{ padding: '10px 16px' }} actions={[<StatusTag key="s" status={d.status} />]}>
+              renderItem={(d, i) => (
+                <List.Item className="t-rise" style={{ padding: '10px 16px', '--i': i } as React.CSSProperties} actions={[<StatusTag key="s" status={d.status} />]}>
                   <List.Item.Meta
                     avatar={<span style={{ color: token.colorTextTertiary }}>{Icons.file}</span>}
                     title={
@@ -140,8 +139,8 @@ export function DashboardPage(): React.ReactElement {
               size="small"
               dataSource={(audit ?? []).slice(0, 6)}
               locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Пусто" /> }}
-              renderItem={(a) => (
-                <List.Item style={{ padding: '10px 16px' }}>
+              renderItem={(a, i) => (
+                <List.Item className="t-rise" style={{ padding: '10px 16px', '--i': i } as React.CSSProperties}>
                   <List.Item.Meta
                     avatar={
                       <Avatar

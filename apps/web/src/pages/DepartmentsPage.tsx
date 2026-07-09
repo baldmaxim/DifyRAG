@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { departmentsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { RowActions } from '../components/RowActions';
 import type { Department } from '../types';
 
@@ -36,7 +35,6 @@ export function DepartmentsPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Отделы" desc="Подразделения компании и их компетенции (skills.md)" />
       {isLoading ? (
         <Skeleton active />
       ) : (

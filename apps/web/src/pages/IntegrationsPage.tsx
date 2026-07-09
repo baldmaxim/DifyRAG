@@ -26,7 +26,6 @@ export function IntegrationsPage(): React.ReactElement {
   return (
     <>
       <PageHead
-        title="Интеграции"
         desc="Состояние внешних сервисов конвейера обработки"
         extra={
           <Button icon={Icons.refresh} loading={isFetching} onClick={() => void refetch()}>

@@ -3,7 +3,6 @@ import { Card, Input, Space, Table, Typography, theme as antdTheme } from 'antd'
 import { useState } from 'react';
 import { documentsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 import type { DocumentRow } from '../types';
 
@@ -19,7 +18,6 @@ export function DocumentsPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Документы" desc="Все документы по всем проектам компании" />
       <Input.Search
         placeholder="Поиск по названию / описанию / контрагенту"
         allowClear

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { authApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
+import { useShake } from '../hooks/useMotion';
 import { useAuthStore } from '../stores/auth.store';
 
 const { Title, Paragraph } = Typography;
@@ -15,6 +16,7 @@ export function LoginPage(): React.ReactElement {
   const setTokens = useAuthStore((s) => s.setTokens);
   const setUser = useAuthStore((s) => s.setUser);
   const [loading, setLoading] = useState(false);
+  const { ref: shakeRef, trigger: shake } = useShake<HTMLDivElement>();
 
   const onFinish = async (values: { email: string; password: string }): Promise<void> => {
     setLoading(true);
@@ -26,6 +28,7 @@ export function LoginPage(): React.ReactElement {
       navigate('/dashboard');
     } catch (err) {
       message.error(apiErrorMessage(err, 'Неверный email или пароль'));
+      shake();
     } finally {
       setLoading(false);
     }
@@ -60,14 +63,15 @@ export function LoginPage(): React.ReactElement {
         </div>
       </div>
       <div className="login-form-col">
-        <Card style={{ width: 380, boxShadow: token.boxShadowSecondary }} variant="borderless">
+        <div ref={shakeRef} className="t-shake" style={{ width: 380 }}>
+        <Card style={{ width: '100%', boxShadow: token.boxShadowSecondary }} variant="borderless">
           <Title level={4} style={{ marginBottom: 4 }}>
             Вход в портал
           </Title>
           <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 20 }}>
             Используйте корпоративную учётную запись
           </Paragraph>
-          <Form layout="vertical" requiredMark={false} onFinish={onFinish}>
+          <Form layout="vertical" requiredMark={false} onFinish={onFinish} onFinishFailed={shake}>
             <Form.Item name="email" label="Рабочий e-mail" rules={[{ required: true, type: 'email' }]}>
               <Input size="large" placeholder="i.ivanov@stroyfirma.kz" autoComplete="username" />
             </Form.Item>
@@ -84,6 +88,7 @@ export function LoginPage(): React.ReactElement {
             </Button>
           </Form>
         </Card>
+        </div>
       </div>
     </div>
   );

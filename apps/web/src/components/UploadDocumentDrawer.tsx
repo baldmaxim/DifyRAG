@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { documentsApi } from '../api/endpoints';
+import { useShake } from '../hooks/useMotion';
 import { Icons } from './icons';
 
 const { Text } = Typography;
@@ -59,6 +60,7 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const docType = Form.useWatch('documentTypeCode', form);
+  const { ref: shakeRef, trigger: shake } = useShake<HTMLDivElement>();
 
   const reset = (): void => {
     form.resetFields();
@@ -146,7 +148,8 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
           { title: 'В очереди' },
         ]}
       />
-      <Form form={form} layout="vertical" onFinish={submit} initialValues={{ confidentiality: 'internal' }}>
+      <div ref={shakeRef} className="t-shake">
+      <Form form={form} layout="vertical" onFinish={submit} onFinishFailed={shake} initialValues={{ confidentiality: 'internal' }}>
         <Form.Item label="Файл" required>
           <Upload.Dragger
             beforeUpload={() => false}
@@ -192,6 +195,7 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
           message="После загрузки документ автоматически попадёт в очередь обработки Dify. Статус виден в таблице документов."
         />
       </Form>
+      </div>
     </Drawer>
   );
 }

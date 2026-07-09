@@ -28,6 +28,11 @@ const shared = {
   padding: 16, paddingLG: 24, paddingSM: 12, paddingXS: 8,
   margin: 16, marginLG: 24,
   motionDurationFast: '0.1s', motionDurationMid: '0.16s', motionDurationSlow: '0.24s',
+  // Кривые движения согласованы с transitions.dev (--ease-smooth-out)
+  motionEaseOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  motionEaseInOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  motionEaseOutCirc: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  motionEaseOutBack: 'cubic-bezier(0.34, 1.36, 0.64, 1)',
   wireframe: false,
 } as const;
 

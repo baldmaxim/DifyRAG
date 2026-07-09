@@ -2,25 +2,21 @@ import { Space, theme as antdTheme } from 'antd';
 import type { ReactNode } from 'react';
 
 interface Props {
-  title: ReactNode;
   desc?: ReactNode;
   extra?: ReactNode;
 }
 
-/** Единая шапка страницы: заголовок + описание слева, действия справа. */
-export function PageHead({ title, desc, extra }: Props): React.ReactElement {
+/**
+ * Тонкая панель действий страницы: контекст/описание слева, действия справа.
+ * Заголовок страницы больше не дублируется — он выводится только в верхней панели (AppLayout).
+ */
+export function PageHead({ desc, extra }: Props): React.ReactElement | null {
   const { token } = antdTheme.useToken();
+  if (!desc && !extra) return null;
   return (
-    <div className="page-head">
-      <div>
-        <h1 className="page-title" style={{ color: token.colorText }}>
-          {title}
-        </h1>
-        {desc && (
-          <div className="page-desc" style={{ color: token.colorTextSecondary }}>
-            {desc}
-          </div>
-        )}
+    <div className="page-head t-reveal">
+      <div className="page-desc" style={{ color: token.colorTextSecondary }}>
+        {desc}
       </div>
       {extra && (
         <Space wrap size={8}>

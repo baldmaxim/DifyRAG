@@ -1,4 +1,4 @@
-import { Avatar, Breadcrumb, Dropdown, Input, Layout, Menu, Space, Switch, Tooltip, Typography, theme as antdTheme } from 'antd';
+import { Avatar, Button, Dropdown, Input, Layout, Menu, Space, Switch, Tooltip, Typography, theme as antdTheme } from 'antd';
 import { useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/endpoints';
@@ -66,8 +66,22 @@ export function AppLayout(): React.ReactElement {
         breakpoint="lg"
         collapsedWidth={64}
         theme="dark"
+        trigger={null}
       >
-        <div className="dkp-logo" style={collapsed ? { padding: '16px 0', justifyContent: 'center' } : undefined}>
+        <div
+          className="dkp-logo"
+          role="button"
+          tabIndex={0}
+          title="На главную"
+          onClick={() => navigate('/dashboard')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/dashboard');
+            }
+          }}
+          style={{ cursor: 'pointer', ...(collapsed ? { padding: '16px 0', justifyContent: 'center' } : {}) }}
+        >
           <div className="dkp-logo-mark">{Icons.cloud}</div>
           {!collapsed && (
             <div>
@@ -97,7 +111,17 @@ export function AppLayout(): React.ReactElement {
             zIndex: 5,
           }}
         >
-          <Breadcrumb items={[{ title: 'DKP' }, { title: current.label }]} />
+          <Space size={12}>
+            <Tooltip title={collapsed ? 'Развернуть меню' : 'Свернуть меню'}>
+              <Button
+                type="text"
+                aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+                icon={Icons.panel}
+                onClick={() => setCollapsed((v) => !v)}
+              />
+            </Tooltip>
+            <span style={{ fontSize: 16, fontWeight: 600, color: token.colorText }}>{current.label}</span>
+          </Space>
           <Space size={14}>
             <Input
               placeholder="Глобальный поиск…  ( / )"
@@ -154,7 +178,9 @@ export function AppLayout(): React.ReactElement {
           </Space>
         </Header>
         <Content style={{ padding: 24, maxWidth: 1560, width: '100%', margin: '0 auto' }}>
-          <Outlet />
+          <div key={location.pathname} className="t-page">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>

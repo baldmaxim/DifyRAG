@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, Table, Typography } from 'antd';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 import { reportingApi } from '../api/endpoints';
 import type { DifyDatasetMappingRow } from '../types';
@@ -12,10 +11,6 @@ export function DifyDatasetsPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead
-        title="Dify Datasets"
-        desc="Соответствие «проект · раздел» → датасет Dify (project_{код}__раздел). Только чтение."
-      />
       <Card size="small" styles={{ body: { padding: 0 } }}>
         <Table<DifyDatasetMappingRow>
           rowKey="id"

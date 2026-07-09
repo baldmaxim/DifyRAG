@@ -71,24 +71,17 @@ td.col-num {
   text-transform: uppercase;
 }
 
-/* ---- Page header ---- */
+/* ---- Page toolbar (тонкая панель действий, без дублирующего заголовка) ---- */
 .page-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-}
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 28px;
-  margin: 0;
 }
 .page-desc {
   font-size: 13px;
-  margin-top: 2px;
 }
 
 /* ---- Pipeline strip (dashboard) ---- */

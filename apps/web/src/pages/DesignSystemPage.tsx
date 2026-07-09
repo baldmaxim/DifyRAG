@@ -1,10 +1,82 @@
 import { Alert, Button, Card, Col, Divider, Empty, Row, Skeleton, Space, Typography, theme as antdTheme } from 'antd';
+import { useState } from 'react';
 import { DKP_STATUS } from '../dkp-theme';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
+import { useShake, useSuccessCheck } from '../hooks/useMotion';
 
 const { Text } = Typography;
+
+/** Живая витрина transitions.dev — вход, hover-lift и интерактивные паттерны. */
+function MotionShowcase(): React.ReactElement {
+  const { token } = antdTheme.useToken();
+  const [runId, setRunId] = useState(0); // remount → переигрывает анимации входа
+  const { ref: shakeRef, trigger: shake } = useShake<HTMLDivElement>();
+  const { ref: checkRef, play } = useSuccessCheck<HTMLSpanElement>();
+
+  const tile: React.CSSProperties = {
+    minWidth: 92,
+    padding: '12px 14px',
+    borderRadius: 8,
+    background: token.colorFillQuaternary,
+    border: `1px solid ${token.colorBorderSecondary}`,
+  };
+
+  return (
+    <Card
+      size="small"
+      title="Движение — transitions.dev"
+      extra={
+        <Button size="small" onClick={() => setRunId((n) => n + 1)}>
+          Повторить вход
+        </Button>
+      }
+    >
+      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+        <div key={runId} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="t-rise" style={{ '--i': i, ...tile } as React.CSSProperties}>
+              <span className="t-num num" style={{ '--i': i, fontSize: 22, fontWeight: 600 } as React.CSSProperties}>
+                {(i + 1) * 17}
+              </span>
+              <div style={{ fontSize: 11, color: token.colorTextTertiary }}>t-rise · t-num</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="t-lift" style={{ ...tile, cursor: 'default', width: 200 }}>
+          <Text style={{ fontSize: 13 }}>Наведите курсор — <b>t-lift</b></Text>
+        </div>
+
+        <Space wrap size={16} align="center">
+          <div ref={shakeRef} className="t-shake">
+            <Button danger onClick={shake}>
+              Показать ошибку · t-shake
+            </Button>
+          </div>
+          <Space size={10} align="center">
+            <Button onClick={play}>Успех · t-success-check</Button>
+            <span ref={checkRef} className="t-success-check" data-state="out" aria-hidden="true" style={{ color: token.colorSuccess }}>
+              <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
+                <path
+                  d="M14 24l7 7 13-14"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ strokeDasharray: 32, strokeDashoffset: 32 }}
+                />
+              </svg>
+            </span>
+          </Space>
+          <span className="t-shimmer" data-text="Индексация в Dify…" style={{ fontSize: 14, fontWeight: 500 }}>
+            Индексация в Dify…
+          </span>
+        </Space>
+      </Space>
+    </Card>
+  );
+}
 
 function Swatch({ c, n, d }: { c: string; n: string; d?: string }): React.ReactElement {
   const { token } = antdTheme.useToken();
@@ -46,7 +118,6 @@ export function DesignSystemPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Дизайн-система" desc="Токены, статусы и базовые состояния — единый язык всех экранов" />
       <Space direction="vertical" size={16} style={{ width: '100%' }}>
         <Card size="small" title="Палитра">
           <Space wrap size={8}>
@@ -140,6 +211,8 @@ export function DesignSystemPage(): React.ReactElement {
             100–240 мс, ease-out.
           </Text>
         </Card>
+
+        <MotionShowcase />
       </Space>
     </>
   );

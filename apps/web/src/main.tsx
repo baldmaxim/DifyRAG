@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppRoot } from './AppRoot';
 import './index.css';
+import './transitions.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

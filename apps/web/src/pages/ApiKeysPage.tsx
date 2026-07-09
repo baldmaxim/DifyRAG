@@ -41,7 +41,6 @@ export function ApiKeysPage(): React.ReactElement {
   return (
     <>
       <PageHead
-        title="API-ключи"
         desc="Ключи внешнего доступа с ограниченными правами (scopes)"
         extra={
           <Button type="primary" icon={Icons.plus} onClick={() => setOpen(true)}>

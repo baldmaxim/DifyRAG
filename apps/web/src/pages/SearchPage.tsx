@@ -5,7 +5,6 @@ import { useSearchParams } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { searchApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import type { SearchResponse } from '../types';
 
 const { Paragraph, Text } = Typography;
@@ -34,10 +33,6 @@ export function SearchPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead
-        title="Семантический поиск"
-        desc="Поиск по смыслу во всех проиндексированных документах (RAG · Dify + Qdrant)"
-      />
       <Card size="small" style={{ marginBottom: 16 }}>
         <Form form={form} onFinish={onFinish} initialValues={{ scope: 'project', mode: 'chunks' }}>
           <Form.Item name="query" rules={[{ required: true, message: 'Введите запрос' }]} style={{ marginBottom: 12 }}>

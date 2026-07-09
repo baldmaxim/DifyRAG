@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { projectsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
+import { useShake } from '../hooks/useMotion';
 import { PageHead } from '../components/PageHead';
 import { RowActions } from '../components/RowActions';
 import { StatusTag } from '../components/StatusTag';
@@ -19,6 +20,7 @@ export function ProjectsPage(): React.ReactElement {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
+  const { ref: shakeRef, trigger: shake } = useShake<HTMLDivElement>();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['projects', search],
@@ -39,7 +41,6 @@ export function ProjectsPage(): React.ReactElement {
   return (
     <>
       <PageHead
-        title="Проекты"
         desc="Объекты строительства и их хранилища документов"
         extra={
           <Button type="primary" icon={Icons.plus} onClick={() => setOpen(true)}>
@@ -128,7 +129,14 @@ export function ProjectsPage(): React.ReactElement {
           </Space>
         }
       >
-        <Form form={form} layout="vertical" requiredMark="optional" onFinish={(v) => createMutation.mutate(v)}>
+        <div ref={shakeRef} className="t-shake">
+        <Form
+          form={form}
+          layout="vertical"
+          requiredMark="optional"
+          onFinish={(v) => createMutation.mutate(v)}
+          onFinishFailed={shake}
+        >
           <Form.Item
             name="code"
             label="Код проекта"
@@ -152,6 +160,7 @@ export function ProjectsPage(): React.ReactElement {
             message="Структура папок 00–99 будет создана автоматически по стандартному шаблону."
           />
         </Form>
+        </div>
       </Drawer>
     </>
   );

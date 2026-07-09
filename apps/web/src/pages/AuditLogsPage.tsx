@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, Descriptions, Drawer, Table, Tag, Typography, theme as antdTheme } from 'antd';
 import { useState } from 'react';
-import { PageHead } from '../components/PageHead';
 import { reportingApi } from '../api/endpoints';
 import type { AuditLogRow } from '../types';
 
@@ -34,7 +33,6 @@ export function AuditLogsPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Аудит" desc="Журнал критичных действий пользователей и внешних систем" />
       <Card size="small" styles={{ body: { padding: 0 } }}>
         <Table<AuditLogRow>
           rowKey="id"

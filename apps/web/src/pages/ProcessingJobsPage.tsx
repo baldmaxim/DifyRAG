@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { App as AntApp, Button, Card, Table, Typography } from 'antd';
 import { processingApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
-import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
 import type { ProcessingJobRow } from '../types';
 
@@ -27,7 +26,6 @@ export function ProcessingJobsPage(): React.ReactElement {
 
   return (
     <>
-      <PageHead title="Обработка" desc="Очередь задач индексации Dify · обновляется автоматически" />
       <Card size="small" styles={{ body: { padding: 0 } }}>
         <Table<ProcessingJobRow>
           rowKey="id"
