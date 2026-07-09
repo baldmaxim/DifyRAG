@@ -26,6 +26,7 @@ const MENU: NavItem[] = [
   { key: '/processing-jobs', icon: 'queue', label: 'Обработка' },
   { key: '/audit-logs', icon: 'audit', label: 'Аудит' },
   { key: '/settings', icon: 'gear2', label: 'Настройки' },
+  { key: '/design-system', icon: 'palette', label: 'Дизайн-система' },
 ];
 
 function initials(name?: string, email?: string): string {

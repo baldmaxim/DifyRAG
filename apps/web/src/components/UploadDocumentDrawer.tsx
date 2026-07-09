@@ -1,11 +1,13 @@
-import { InboxOutlined } from '@ant-design/icons';
 import { DOCUMENT_TYPE_CODE_VALUES } from '@dkp/shared';
-import { App as AntApp, Button, DatePicker, Drawer, Form, Input, Select, Space, Steps, Upload } from 'antd';
+import { App as AntApp, Alert, Button, DatePicker, Drawer, Form, Input, Select, Space, Steps, Typography, Upload, theme as antdTheme } from 'antd';
 import type { UploadFile } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { documentsApi } from '../api/endpoints';
+import { Icons } from './icons';
+
+const { Text } = Typography;
 
 interface Props {
   folderId: string | null;
@@ -23,7 +25,7 @@ function DynamicFields({ type }: { type?: string }): React.ReactElement | null {
           <Input placeholder="Июнь 2026" />
         </Form.Item>
         <Form.Item name={['metadata', 'party_role']} label="Сторона">
-          <Select options={[{ value: 'customer' }, { value: 'subcontractor' }]} allowClear />
+          <Select options={[{ value: 'customer', label: 'Заказчик' }, { value: 'subcontractor', label: 'Субподряд' }]} allowClear />
         </Form.Item>
         <Form.Item name={['metadata', 'amount_with_vat']} label="Сумма с НДС">
           <Input type="number" />
@@ -50,6 +52,7 @@ function DynamicFields({ type }: { type?: string }): React.ReactElement | null {
 }
 
 export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Props): React.ReactElement {
+  const { token } = antdTheme.useToken();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
   const [file, setFile] = useState<UploadFile | null>(null);
@@ -115,29 +118,56 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
   };
 
   return (
-    <Drawer title="Загрузка документа" open={open} onClose={onClose} width={480} destroyOnClose>
+    <Drawer
+      title="Загрузка документа"
+      open={open}
+      onClose={onClose}
+      width={480}
+      destroyOnClose
+      footer={
+        <Space style={{ float: 'right' }}>
+          <Button onClick={onClose}>Отмена</Button>
+          <Button type="primary" icon={Icons.upload} loading={busy} onClick={() => form.submit()}>
+            Загрузить и отправить в обработку
+          </Button>
+        </Space>
+      }
+    >
       <Steps
         size="small"
         current={step}
         style={{ marginBottom: 24 }}
         items={[
-          { title: 'Metadata' },
+          { title: 'Метаданные' },
           { title: 'Создан' },
           { title: 'S3 URL' },
           { title: 'Upload' },
           { title: 'Commit' },
-          { title: 'Queued' },
+          { title: 'В очереди' },
         ]}
       />
-      <Form form={form} layout="vertical" onFinish={submit}>
+      <Form form={form} layout="vertical" onFinish={submit} initialValues={{ confidentiality: 'internal' }}>
+        <Form.Item label="Файл" required>
+          <Upload.Dragger
+            beforeUpload={() => false}
+            maxCount={1}
+            fileList={file ? [file] : []}
+            onChange={({ fileList }) => setFile(fileList[0] ?? null)}
+            style={{ background: token.colorFillQuaternary, borderRadius: 10 }}
+          >
+            <div style={{ color: token.colorPrimary, marginBottom: 8 }}>{Icons.upload}</div>
+            <Text>Перетащите файл сюда или выберите на диске</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              PDF, DOCX, XLSX и др. · загрузка напрямую в S3
+            </Text>
+          </Upload.Dragger>
+        </Form.Item>
         <Form.Item name="title" label="Название" rules={[{ required: true }]}>
           <Input />
         </Form.Item>
         <Form.Item name="documentTypeCode" label="Тип документа" rules={[{ required: true }]}>
-          <Select
-            showSearch
-            options={DOCUMENT_TYPE_CODE_VALUES.map((c) => ({ value: c, label: c }))}
-          />
+          <Select showSearch options={DOCUMENT_TYPE_CODE_VALUES.map((c) => ({ value: c, label: c }))} />
         </Form.Item>
         <Form.Item name="documentDate" label="Дата документа">
           <DatePicker style={{ width: '100%' }} />
@@ -145,31 +175,22 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
         <Form.Item name="counterparty" label="Контрагент">
           <Input />
         </Form.Item>
-        <Form.Item name="confidentiality" label="Конфиденциальность" initialValue="internal">
+        <Form.Item name="confidentiality" label="Конфиденциальность">
           <Select
-            options={['public', 'internal', 'confidential', 'restricted'].map((v) => ({ value: v }))}
+            options={[
+              { value: 'public', label: 'Публичный' },
+              { value: 'internal', label: 'Внутренний' },
+              { value: 'confidential', label: 'Конфиденциальный' },
+              { value: 'restricted', label: 'Ограниченный' },
+            ]}
           />
         </Form.Item>
         <DynamicFields type={docType} />
-        <Form.Item label="Файл" required>
-          <Upload.Dragger
-            beforeUpload={() => false}
-            maxCount={1}
-            fileList={file ? [file] : []}
-            onChange={({ fileList }) => setFile(fileList[0] ?? null)}
-          >
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p>Перетащите файл сюда</p>
-          </Upload.Dragger>
-        </Form.Item>
-        <Space>
-          <Button type="primary" htmlType="submit" loading={busy}>
-            Загрузить
-          </Button>
-          <Button onClick={onClose}>Отмена</Button>
-        </Space>
+        <Alert
+          type="info"
+          showIcon
+          message="После загрузки документ автоматически попадёт в очередь обработки Dify. Статус виден в таблице документов."
+        />
       </Form>
     </Drawer>
   );
