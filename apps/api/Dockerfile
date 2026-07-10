@@ -21,17 +21,18 @@ FROM node:22-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends openssl wget ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
-# Copy the built app plus its dependencies (includes the generated Prisma client + engine).
+ENV NODE_PATH=/app/node_modules/.pnpm/node_modules:/app/node_modules
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+# Pin Prisma CLI for migrations (pnpm hoists it under .pnpm in builder only).
+RUN npm install -g prisma@6.19.3
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
   CMD wget -qO- http://localhost:3000/api/v1/health || exit 1
 
-# Run migrations then start (override the entrypoint if you migrate separately).
-CMD ["sh", "-c", "cd apps/api && node ../../node_modules/prisma/build/index.js migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "cd apps/api && prisma migrate deploy && node dist/main.js"]
