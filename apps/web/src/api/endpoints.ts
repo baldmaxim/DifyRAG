@@ -1,5 +1,6 @@
 import { api } from './client';
 import type {
+  AdminUser,
   ApiKeySummary,
   AuditLogRow,
   CreatedApiKey,
@@ -14,6 +15,7 @@ import type {
   MaskedSettingGroup,
   ProcessingJobRow,
   Project,
+  RegisterResult,
   SearchResponse,
   TokenPair,
   UploadUrlResult,
@@ -21,10 +23,19 @@ import type {
 
 // ── Auth ──────────────────────────────────────────────────
 export const authApi = {
+  register: (body: { fullName: string; email: string; password: string }) =>
+    api.post<RegisterResult>('/auth/register', body).then((r) => r.data),
   login: (email: string, password: string) =>
     api.post<TokenPair>('/auth/login', { email, password }).then((r) => r.data),
   me: () => api.get<CurrentUser>('/auth/me').then((r) => r.data),
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
+};
+
+// ── Users (admin) ─────────────────────────────────────────
+export const usersApi = {
+  list: () => api.get<AdminUser[]>('/users').then((r) => r.data),
+  update: (id: string, patch: { status?: 'active' | 'disabled'; role?: 'admin' | 'user' }) =>
+    api.patch<AdminUser>(`/users/${id}`, patch).then((r) => r.data),
 };
 
 // ── Projects ──────────────────────────────────────────────

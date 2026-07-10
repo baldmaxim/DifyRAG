@@ -18,6 +18,17 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+export type RegisterResult = { status: 'active'; tokens: TokenPair } | { status: 'pending' };
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  status: string;
+  createdAt: string;
+}
+
 export interface Project {
   id: string;
   code: string;

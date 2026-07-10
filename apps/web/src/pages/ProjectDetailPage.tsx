@@ -142,6 +142,7 @@ export function ProjectDetailPage(): React.ReactElement {
               rowKey="id"
               loading={isLoading}
               dataSource={documents ?? []}
+              scroll={{ x: 'max-content' }}
               pagination={{ pageSize: 12, size: 'small', showTotal: (t) => `Всего: ${t}` }}
               columns={[
                 {

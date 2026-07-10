@@ -22,6 +22,7 @@ import { ReportingModule } from './reporting/reporting.module';
 import { SearchModule } from './search/search.module';
 import { SettingsModule } from './settings/settings.module';
 import { StorageModule } from './storage/storage.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { StorageModule } from './storage/storage.module';
     AuditModule,
     StorageModule,
     AuthModule,
+    UsersModule,
     ProjectsModule,
     FoldersModule,
     DepartmentsModule,

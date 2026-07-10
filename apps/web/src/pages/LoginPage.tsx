@@ -1,13 +1,13 @@
 import { App as AntApp, Button, Card, Form, Input, Typography, theme as antdTheme } from 'antd';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { authApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
 import { useShake } from '../hooks/useMotion';
 import { useAuthStore } from '../stores/auth.store';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export function LoginPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ export function LoginPage(): React.ReactElement {
         </div>
       </div>
       <div className="login-form-col">
-        <div ref={shakeRef} className="t-shake" style={{ width: 380 }}>
+        <div ref={shakeRef} className="t-shake" style={{ width: '100%', maxWidth: 380 }}>
         <Card style={{ width: '100%', boxShadow: token.boxShadowSecondary }} variant="borderless">
           <Title level={4} style={{ marginBottom: 4 }}>
             Вход в портал
@@ -87,6 +87,14 @@ export function LoginPage(): React.ReactElement {
               Войти
             </Button>
           </Form>
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              Нет аккаунта?{' '}
+            </Text>
+            <Link to="/register" style={{ fontSize: 13 }}>
+              Зарегистрироваться
+            </Link>
+          </div>
         </Card>
         </div>
       </div>

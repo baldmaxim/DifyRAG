@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { projectsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { useShake } from '../hooks/useMotion';
 import { PageHead } from '../components/PageHead';
 import { RowActions } from '../components/RowActions';
@@ -15,6 +16,7 @@ const { Text } = Typography;
 
 export function ProjectsPage(): React.ReactElement {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [search, setSearch] = useState('');
@@ -83,6 +85,7 @@ export function ProjectsPage(): React.ReactElement {
           <Table<Project>
             rowKey="id"
             dataSource={data ?? []}
+            scroll={{ x: 'max-content' }}
             pagination={{ pageSize: 10, size: 'small', showTotal: (t) => `Всего: ${t}` }}
             onRow={(record) => ({ onClick: () => navigate(`/projects/${record.id}`), style: { cursor: 'pointer' } })}
             columns={[
@@ -119,7 +122,7 @@ export function ProjectsPage(): React.ReactElement {
         title="Новый проект"
         open={open}
         onClose={() => setOpen(false)}
-        width={440}
+        width={isMobile ? '100%' : 440}
         footer={
           <Space style={{ float: 'right' }}>
             <Button onClick={() => setOpen(false)}>Отмена</Button>

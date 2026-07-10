@@ -16,6 +16,7 @@ export function DifyDatasetsPage(): React.ReactElement {
           rowKey="id"
           loading={isLoading}
           dataSource={data ?? []}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 15, size: 'small', showTotal: (t) => `Всего: ${t}` }}
           columns={[
             {

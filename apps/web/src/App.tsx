@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage').then((m) => ({ default: m.ProjectsPage })));
@@ -17,13 +18,15 @@ const ApiKeysPage = lazy(() => import('./pages/ApiKeysPage').then((m) => ({ defa
 const ProcessingJobsPage = lazy(() => import('./pages/ProcessingJobsPage').then((m) => ({ default: m.ProcessingJobsPage })));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage').then((m) => ({ default: m.AuditLogsPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const UsersPage = lazy(() => import('./pages/UsersPage').then((m) => ({ default: m.UsersPage })));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage').then((m) => ({ default: m.DesignSystemPage })));
 
 function App(): React.ReactElement {
   return (
-    <Suspense fallback={<Spin style={{ display: 'block', margin: '25vh auto' }} size="large" />}>
+    <Suspense fallback={<Spin style={{ display: 'block', margin: '25dvh auto' }} size="large" />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
@@ -39,6 +42,7 @@ function App(): React.ReactElement {
             <Route path="/processing-jobs" element={<ProcessingJobsPage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/design-system" element={<DesignSystemPage />} />
           </Route>
         </Route>

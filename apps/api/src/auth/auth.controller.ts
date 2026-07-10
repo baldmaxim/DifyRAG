@@ -3,15 +3,27 @@ import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/types/authenticated-request';
-import { AuthService } from './auth.service';
+import { AuthService, type RegisterResult } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { RegisterDto } from './dto/register.dto';
 import type { TokenPair } from './tokens.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('register')
+  @ApiOkResponse({
+    description:
+      'Self-registration. First-ever user becomes an active admin (returns tokens); ' +
+      'subsequent users are created disabled and await admin activation (returns pending).',
+  })
+  register(@Body() dto: RegisterDto): Promise<RegisterResult> {
+    return this.authService.register(dto);
+  }
 
   @Public()
   @Post('login')

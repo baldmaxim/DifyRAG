@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Descriptions, Drawer, Table, Tag, Typography, theme as antdTheme } from 'antd';
 import { useState } from 'react';
 import { reportingApi } from '../api/endpoints';
+import { useIsMobile } from '../hooks/useIsMobile';
 import type { AuditLogRow } from '../types';
 
 const { Text } = Typography;
@@ -28,6 +29,7 @@ function JsonBlock({ value }: { value: unknown }): React.ReactElement {
 }
 
 export function AuditLogsPage(): React.ReactElement {
+  const isMobile = useIsMobile();
   const [selected, setSelected] = useState<AuditLogRow | null>(null);
   const { data, isLoading } = useQuery({ queryKey: ['audit-logs'], queryFn: () => reportingApi.auditLogs({}) });
 
@@ -38,6 +40,7 @@ export function AuditLogsPage(): React.ReactElement {
           rowKey="id"
           loading={isLoading}
           dataSource={data ?? []}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 20, size: 'small', showTotal: (t) => `Всего: ${t}` }}
           onRow={(r) => ({ onClick: () => setSelected(r), style: { cursor: 'pointer' } })}
           columns={[
@@ -58,7 +61,7 @@ export function AuditLogsPage(): React.ReactElement {
         />
       </Card>
 
-      <Drawer title="Детали события" open={Boolean(selected)} onClose={() => setSelected(null)} width={520}>
+      <Drawer title="Детали события" open={Boolean(selected)} onClose={() => setSelected(null)} width={isMobile ? '100%' : 520}>
         {selected && (
           <>
             <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>

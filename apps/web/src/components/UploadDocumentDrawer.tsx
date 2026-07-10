@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { documentsApi } from '../api/endpoints';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { useShake } from '../hooks/useMotion';
 import { Icons } from './icons';
 
@@ -53,6 +54,7 @@ function DynamicFields({ type }: { type?: string }): React.ReactElement | null {
 }
 
 export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Props): React.ReactElement {
+  const isMobile = useIsMobile();
   const { token } = antdTheme.useToken();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
@@ -124,7 +126,7 @@ export function UploadDocumentDrawer({ folderId, open, onClose, onUploaded }: Pr
       title="Загрузка документа"
       open={open}
       onClose={onClose}
-      width={480}
+      width={isMobile ? '100%' : 480}
       destroyOnClose
       footer={
         <Space style={{ float: 'right' }}>

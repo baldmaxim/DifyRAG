@@ -4,6 +4,7 @@ import { App as AntApp, Alert, Button, Card, Form, Input, Modal, Popconfirm, Sel
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { apiKeysApi } from '../api/endpoints';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { Icons } from '../components/icons';
 import { PageHead } from '../components/PageHead';
 import { StatusTag } from '../components/StatusTag';
@@ -12,6 +13,7 @@ import type { ApiKeySummary } from '../types';
 const { Text } = Typography;
 
 export function ApiKeysPage(): React.ReactElement {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [form] = Form.useForm();
@@ -53,6 +55,7 @@ export function ApiKeysPage(): React.ReactElement {
           rowKey="id"
           loading={isLoading}
           dataSource={data ?? []}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 15, size: 'small' }}
           columns={[
             {
@@ -112,6 +115,7 @@ export function ApiKeysPage(): React.ReactElement {
         okText="Создать"
         confirmLoading={createMutation.isPending}
         onOk={() => form.submit()}
+        width={isMobile ? 'calc(100vw - 24px)' : undefined}
       >
         <Form form={form} layout="vertical" onFinish={(v) => createMutation.mutate(v)}>
           <Form.Item name="name" label="Название" rules={[{ required: true }]}>
@@ -128,6 +132,7 @@ export function ApiKeysPage(): React.ReactElement {
         open={Boolean(createdKey)}
         onCancel={() => setCreatedKey(null)}
         onOk={() => setCreatedKey(null)}
+        width={isMobile ? 'calc(100vw - 24px)' : undefined}
       >
         <Alert
           type="warning"
@@ -135,7 +140,7 @@ export function ApiKeysPage(): React.ReactElement {
           message="Секрет больше не будет показан"
           style={{ marginBottom: 12 }}
         />
-        <Text copyable code className="mono" style={{ wordBreak: 'break-all' }}>
+        <Text copyable code className="mono" style={{ overflowWrap: 'anywhere' }}>
           {createdKey}
         </Text>
       </Modal>

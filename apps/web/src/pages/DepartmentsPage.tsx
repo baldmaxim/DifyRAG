@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { apiErrorMessage } from '../api/client';
 import { departmentsApi } from '../api/endpoints';
 import { Icons } from '../components/icons';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { RowActions } from '../components/RowActions';
 import type { Department } from '../types';
 
 const { Text, Paragraph } = Typography;
 
 export function DepartmentsPage(): React.ReactElement {
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const [editing, setEditing] = useState<Department | null>(null);
@@ -69,7 +71,7 @@ export function DepartmentsPage(): React.ReactElement {
         title={editing?.name}
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
-        width={560}
+        width={isMobile ? '100%' : 560}
         footer={
           <Space style={{ float: 'right' }}>
             <Button onClick={() => setEditing(null)}>Отмена</Button>

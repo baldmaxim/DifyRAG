@@ -13,6 +13,8 @@ body,
   margin: 0;
   padding: 0;
   height: 100%;
+  /* Ни один переполняющий блок не должен давать горизонтальный скролл всей страницы */
+  overflow-x: hidden;
 }
 
 /* Tabular figures for numeric content (counts, sizes, statistics) */
@@ -124,7 +126,8 @@ td.col-num {
 
 /* ---- Login split-screen ---- */
 .login-wrap {
-  min-height: 100vh;
+  min-height: 100vh; /* фоллбэк для старых браузеров без dvh */
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
 }
@@ -156,7 +159,9 @@ td.col-num {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  /* safe-area по бокам, чтобы форма не уходила под вырезы/скругления */
+  padding: max(40px, env(safe-area-inset-top)) max(40px, env(safe-area-inset-right))
+    max(40px, env(safe-area-inset-bottom)) max(40px, env(safe-area-inset-left));
 }
 @media (max-width: 900px) {
   .login-wrap {
@@ -186,4 +191,35 @@ td.col-num {
   font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0.1px;
+}
+
+/* ---- Мобильная адаптация ---- */
+
+/* Sticky-шапка приложения. content-box — чтобы верхний safe-area inset
+   (задаётся inline в AppLayout) увеличивал высоту, а не съедал контент. */
+.app-header {
+  box-sizing: content-box;
+}
+
+@media (max-width: 767.98px) {
+  /* Анти-зум iOS/Android-Chrome: шрифт инпутов ≥16px (иначе браузер зумит при фокусе) */
+  .ant-input,
+  .ant-input-affix-wrapper input,
+  .ant-input-number-input,
+  .ant-select-selector .ant-select-selection-search-input,
+  .ant-picker-input input,
+  textarea.ant-input {
+    font-size: 16px !important;
+  }
+
+  /* Компактнее тулбар страниц */
+  .page-head {
+    gap: 8px;
+  }
+
+  /* Тап-цели: бургер и иконка поиска в шапке ≥44px */
+  .app-header .ant-btn-icon-only {
+    min-width: 44px;
+    height: 44px;
+  }
 }
