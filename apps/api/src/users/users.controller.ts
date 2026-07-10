@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@dkp/shared';
 import { AuditService } from '../common/audit/audit.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { AuthenticatedRequest, AuthenticatedUser } from '../common/types/authenticated-request';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService, type UserSummary } from './users.service';
 
@@ -41,5 +42,25 @@ export class UsersController {
       after: { status: updated.status, role: updated.role },
     });
     return updated;
+  }
+
+  @Patch(':id/password')
+  @HttpCode(204)
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() dto: ResetPasswordDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.users.resetPassword(id, dto.password);
+    // Пароль в audit не пишем — только факт смены.
+    await this.audit.write({
+      actor: AuditService.actorFromUser(user),
+      action: 'user.reset_password',
+      resourceType: 'user',
+      resourceId: id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'] ?? null,
+    });
   }
 }

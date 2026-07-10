@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App as AntApp, Button, Card, Popconfirm, Table, Tag, Typography } from 'antd';
+import { App as AntApp, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Tag, Typography } from 'antd';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { apiErrorMessage } from '../api/client';
 import { usersApi } from '../api/endpoints';
@@ -15,15 +16,32 @@ export function UsersPage(): React.ReactElement {
   const queryClient = useQueryClient();
   const { message } = AntApp.useApp();
   const currentUser = useAuthStore((s) => s.user);
+  const [pwdTarget, setPwdTarget] = useState<AdminUser | null>(null);
+  const [form] = Form.useForm();
 
   const { data, isLoading } = useQuery({ queryKey: ['users'], queryFn: usersApi.list });
 
+  const invalidate = (): void => void queryClient.invalidateQueries({ queryKey: ['users'] });
+
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'active' | 'disabled' }) =>
-      usersApi.update(id, { status }),
-    onSuccess: (_, { status }) => {
-      message.success(status === 'active' ? 'Пользователь активирован' : 'Пользователь заблокирован');
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
+    mutationFn: ({ id, patch }: {
+      id: string;
+      patch: { status?: 'active' | 'disabled'; role?: 'admin' | 'user' };
+      okMsg: string;
+    }) => usersApi.update(id, patch),
+    onSuccess: (_, { okMsg }) => {
+      message.success(okMsg);
+      invalidate();
+    },
+    onError: (err) => message.error(apiErrorMessage(err)),
+  });
+
+  const passwordMutation = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) => usersApi.resetPassword(id, password),
+    onSuccess: () => {
+      message.success('Пароль изменён');
+      setPwdTarget(null);
+      form.resetFields();
     },
     onError: (err) => message.error(apiErrorMessage(err)),
   });
@@ -41,6 +59,7 @@ export function UsersPage(): React.ReactElement {
           rowKey="id"
           loading={isLoading}
           dataSource={data ?? []}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 15, size: 'small' }}
           columns={[
             {
@@ -78,7 +97,7 @@ export function UsersPage(): React.ReactElement {
             {
               title: 'Создан',
               dataIndex: 'createdAt',
-              width: 180,
+              width: 170,
               render: (v: string) => (
                 <Text type="secondary" className="num" style={{ fontSize: 12.5 }}>
                   {new Date(v).toLocaleString()}
@@ -87,38 +106,110 @@ export function UsersPage(): React.ReactElement {
             },
             {
               title: '',
-              width: 140,
+              width: 340,
               render: (_, row) => {
                 const isSelf = row.id === currentUser?.id;
-                if (row.status === 'active') {
-                  return (
+                const toAdmin = row.role !== 'admin';
+                return (
+                  <Space size={6} wrap>
+                    {row.status === 'active' ? (
+                      <Popconfirm
+                        title="Заблокировать пользователя?"
+                        disabled={isSelf}
+                        onConfirm={() =>
+                          updateMutation.mutate({
+                            id: row.id,
+                            patch: { status: 'disabled' },
+                            okMsg: 'Пользователь заблокирован',
+                          })
+                        }
+                      >
+                        <Button danger size="small" icon={Icons.cross} disabled={isSelf}>
+                          Заблокировать
+                        </Button>
+                      </Popconfirm>
+                    ) : (
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={Icons.check}
+                        onClick={() =>
+                          updateMutation.mutate({
+                            id: row.id,
+                            patch: { status: 'active' },
+                            okMsg: 'Пользователь активирован',
+                          })
+                        }
+                      >
+                        Активировать
+                      </Button>
+                    )}
                     <Popconfirm
-                      title="Заблокировать пользователя?"
+                      title={toAdmin ? 'Назначить администратором?' : 'Снять роль администратора?'}
                       disabled={isSelf}
-                      onConfirm={() => updateMutation.mutate({ id: row.id, status: 'disabled' })}
+                      onConfirm={() =>
+                        updateMutation.mutate({
+                          id: row.id,
+                          patch: { role: toAdmin ? 'admin' : 'user' },
+                          okMsg: 'Роль обновлена',
+                        })
+                      }
                     >
-                      <Button danger size="small" icon={Icons.cross} disabled={isSelf}>
-                        Заблокировать
+                      <Button size="small" icon={Icons.users} disabled={isSelf}>
+                        {toAdmin ? 'Сделать админом' : 'Снять админа'}
                       </Button>
                     </Popconfirm>
-                  );
-                }
-                return (
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={Icons.check}
-                    loading={updateMutation.isPending}
-                    onClick={() => updateMutation.mutate({ id: row.id, status: 'active' })}
-                  >
-                    Активировать
-                  </Button>
+                    <Button size="small" icon={Icons.key} onClick={() => setPwdTarget(row)}>
+                      Пароль
+                    </Button>
+                  </Space>
                 );
               },
             },
           ]}
         />
       </Card>
+
+      <Modal
+        title={`Сменить пароль — ${pwdTarget?.fullName ?? ''}`}
+        open={Boolean(pwdTarget)}
+        onCancel={() => {
+          setPwdTarget(null);
+          form.resetFields();
+        }}
+        okText="Сохранить"
+        confirmLoading={passwordMutation.isPending}
+        onOk={() => form.submit()}
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={(v: { password: string }) =>
+            pwdTarget && passwordMutation.mutate({ id: pwdTarget.id, password: v.password })
+          }
+        >
+          <Form.Item name="password" label="Новый пароль" rules={[{ required: true, min: 8 }]}>
+            <Input.Password size="large" autoComplete="new-password" placeholder="••••••••" />
+          </Form.Item>
+          <Form.Item
+            name="confirm"
+            label="Повторите пароль"
+            dependencies={['password']}
+            rules={[
+              { required: true },
+              ({ getFieldValue }) => ({
+                validator(_, value: string) {
+                  if (!value || getFieldValue('password') === value) return Promise.resolve();
+                  return Promise.reject(new Error('Пароли не совпадают'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password size="large" autoComplete="new-password" placeholder="••••••••" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 }

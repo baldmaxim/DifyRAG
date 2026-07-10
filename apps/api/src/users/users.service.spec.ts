@@ -50,4 +50,32 @@ describe('UsersService', () => {
       NotFoundException,
     );
   });
+
+  it('hashes a new password and revokes active sessions', async () => {
+    const update = vi.fn(async () => ({ id: 'u2' }));
+    const updateMany = vi.fn(async () => ({ count: 2 }));
+    const prisma = {
+      user: { findUnique: vi.fn(async () => ({ id: 'u2' })), update },
+      refreshToken: { updateMany },
+    } as unknown as PrismaService;
+    const service = new UsersService(prisma);
+    await service.resetPassword('u2', 'new-password-123');
+
+    const storedHash = update.mock.calls[0][0].data.passwordHash as string;
+    expect(storedHash).not.toContain('new-password-123');
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { userId: 'u2', revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    });
+  });
+
+  it('throws when resetting the password of a missing user', async () => {
+    const prisma = {
+      user: { findUnique: vi.fn(async () => null) },
+    } as unknown as PrismaService;
+    const service = new UsersService(prisma);
+    await expect(service.resetPassword('ghost', 'new-password-123')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
 });

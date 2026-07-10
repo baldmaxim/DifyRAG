@@ -36,6 +36,8 @@ export const usersApi = {
   list: () => api.get<AdminUser[]>('/users').then((r) => r.data),
   update: (id: string, patch: { status?: 'active' | 'disabled'; role?: 'admin' | 'user' }) =>
     api.patch<AdminUser>(`/users/${id}`, patch).then((r) => r.data),
+  resetPassword: (id: string, password: string) =>
+    api.patch(`/users/${id}/password`, { password }).then((r) => r.data),
 };
 
 // ── Projects ──────────────────────────────────────────────
