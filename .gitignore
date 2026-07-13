@@ -1,35 +1,20 @@
 # deps
 node_modules/
-.pnpm-store/
-
-# build output
-dist/
-build/
-*.tsbuildinfo
 
 # env / secrets
 .env
 .env.*
 !.env.example
+!.env.qdrant.s3.lmstudio.example
 *.pem
 *.key
-
-# prisma
-apps/api/prisma/*.db
 
 # logs
 logs/
 *.log
-npm-debug.log*
-pnpm-debug.log*
 
 # editor / os
 .DS_Store
 .idea/
 .vscode/*
 !.vscode/extensions.json
-coverage/
-
-# frontend
-apps/web/dist/
-apps/web/.vite/

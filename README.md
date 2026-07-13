@@ -1,61 +1,43 @@
-# Document Knowledge Portal
+# DifyRAG
 
-Dify-first document management and RAG-indexing portal for a construction company.
-**Dify is the primary RAG engine** — the app stores originals in Cloud.ru S3, metadata in
-PostgreSQL, and sends files to Dify; Dify parses/chunks, calls LM Studio for embeddings, and
-writes to Qdrant. The app **never writes to Qdrant directly** (Qdrant is read-only health only).
+RAG-система строительной компании на базе **Dify**. Главная система — **Dify UI**:
+документы загружаются в Dify Knowledge, поиск и чат — прямо в Dify.
 
-## Monorepo layout
+> Собственный портал (NestJS + React) выведен из эксплуатации и удалён из репозитория —
+> код доступен в истории git (до июля 2026). Данные его Postgres сохранены в volume
+> `dkp_postgres_data` на сервере.
+
+## Стек
 
 ```text
-apps/
-  api/        NestJS + TypeScript backend (Prisma, S3, Dify integration)
-  web/        React + Vite + Ant Design 5 frontend
-packages/
-  shared/     Shared enums/types (@dkp/shared)
-docs/         Architecture & operations documentation
-infra/        Dify / Qdrant / LM Studio / platform deployment configs
+Dify (UI + RAG engine)  →  LM Studio (:1234, embeddings Qwen3-Embedding-8B dim 4096 + LLM)
+        │
+        └→ Qdrant (vector store, VECTOR_STORE=qdrant)
 ```
 
-## Prerequisites
+Всё работает на GPU-сервере. Наружу публикуется только Dify UI через host-прокси
+(Caddy/nginx); Qdrant и LM Studio доступны только с хоста (127.0.0.1).
 
-- Node.js >= 20 (tested on Node 24)
-- pnpm (via `corepack enable`)
-- Docker + Docker Compose (for the local dev database and infra stack)
+## Структура репозитория
 
-## Commands
-
-```bash
-pnpm install       # install all workspace dependencies
-pnpm dev           # run api (:3000) and web (:5173) in parallel
-pnpm build         # build @dkp/shared, then api and web
-pnpm lint          # eslint across all packages
-pnpm typecheck     # tsc --noEmit across all packages
-pnpm test          # vitest across all packages
-pnpm format        # prettier --write
-
-# database (backend)
-docker compose -f docker-compose.dev.yml up -d   # local Postgres
-pnpm db:migrate                                   # apply Prisma migrations
-pnpm seed                                          # idempotent seed (admin, doc types, departments)
+```text
+infra/
+  platform/   docker-compose.prod.yml — Qdrant на проде (порты на 127.0.0.1)
+  qdrant/     локальный Qdrant для экспериментов
+  dify/       docker-compose.override.example.yml — override для официального compose Dify
+scripts/      ssh-deploy.mjs / ssh-exec.mjs / ssh-exec.ps1 — управление сервером по SSH
+docs/         настройка Dify, LM Studio, Qdrant, деплой, runbook
 ```
 
-## Environment
+Dify разворачивается отдельно из официального репозитория
+(`git clone langgenius/dify` → `docker/docker-compose.yaml` + override) — его исходники
+в этот репозиторий не копируются.
 
-Copy the example env files and fill them in (secrets live only on the backend):
+## Документация
 
-```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
-```
-
-## Documentation
-
-- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
-  [docs/DIFY_FIRST_ARCHITECTURE.md](docs/DIFY_FIRST_ARCHITECTURE.md)
-- Data & API: [docs/DATABASE_MODEL.md](docs/DATABASE_MODEL.md),
-  [docs/API_DESIGN.md](docs/API_DESIGN.md)
-- RAG flows: [docs/RAG_PROCESSING_FLOW.md](docs/RAG_PROCESSING_FLOW.md),
-  [docs/RAG_SEARCH_API.md](docs/RAG_SEARCH_API.md), [docs/S3_STORAGE_FLOW.md](docs/S3_STORAGE_FLOW.md)
-- Deploy / RAG environment: [docs/END_TO_END_RAG_DEPLOYMENT.md](docs/END_TO_END_RAG_DEPLOYMENT.md),
-  [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
+- [docs/DIFY_SETUP.md](docs/DIFY_SETUP.md) — установка и настройка Dify
+- [docs/LM_STUDIO_DIFY_PROVIDER_SETUP.md](docs/LM_STUDIO_DIFY_PROVIDER_SETUP.md) — LM Studio как model provider
+- [docs/QDRANT_DIFY_MODE.md](docs/QDRANT_DIFY_MODE.md) — Qdrant в режиме vector store для Dify
+- [docs/END_TO_END_RAG_DEPLOYMENT.md](docs/END_TO_END_RAG_DEPLOYMENT.md) — сквозной запуск стека
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — деплой на GPU-сервер
+- [docs/TEST_HOST_RUNBOOK.md](docs/TEST_HOST_RUNBOOK.md) — runbook тестового хоста

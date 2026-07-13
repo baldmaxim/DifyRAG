@@ -3,8 +3,7 @@
 LM Studio serves an OpenAI-compatible embedding model. **Server (production):**
 `Qwen/Qwen3-Embedding-8B` (dim **4096**). **Local testing:** load a smaller installed model
 (e.g. 384/768/1024 dim) — set `LM_STUDIO_EMBEDDING_MODEL` and `LM_STUDIO_EXPECTED_EMBEDDING_DIMENSION`
-to whichever is loaded. Dify connects to it as a model provider; the portal uses LM Studio only for
-health/diagnostics — it never generates document embeddings itself.
+to whichever is loaded. Dify connects to it as a model provider for embeddings and answers.
 
 ## 1. Start the LM Studio Server
 

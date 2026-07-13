@@ -30,8 +30,8 @@ If Dify runs on a different host than LM Studio, use the GPU host's private IP:
 ## 3. Use it in a Knowledge Base
 
 When creating a Knowledge Base in Dify, choose **high quality** indexing and select the
-LM Studio embedding model. All documents sent via the portal will then be embedded through
-LM Studio and stored in Qdrant.
+LM Studio embedding model. All documents uploaded to the Knowledge Base will then be embedded
+through LM Studio and stored in Qdrant.
 
 ## Troubleshooting
 

@@ -1,22 +1,13 @@
 # Qdrant in Dify-managed mode
 
-Qdrant is the vector store, but **Dify owns the collections**. The portal is strictly read-only
-against Qdrant.
+Qdrant is the vector store, and **Dify owns the collections** — nothing else writes to Qdrant.
+Manual access (curl/console) is for read-only diagnostics.
 
 ## What Dify does
 
 - Creates collections (named/managed by Dify) when a Knowledge Base is first indexed.
 - Writes vectors (embeddings from LM Studio) and payloads.
 - Queries Qdrant during retrieval.
-
-## What the portal may do (read-only)
-
-- `health()` — liveness/readiness.
-- `listCollections()` — for admin diagnostics.
-- `getCollection(name)` — inspect a collection.
-
-The portal's Qdrant client **must not** contain `upsert`, `deletePoints`, `updateVectors`, or
-`overwritePayload`. A unit test asserts these methods do not exist (prompt 04/07).
 
 ## Verify a collection appeared
 
@@ -36,6 +27,6 @@ The vector size in the collection config must equal the active model's dimension
 - **Wrong vector size:** the Dify KB was created with a different embedding model; recreate the KB
   with the model for the current environment. A collection created at one dimension can NOT be
   reused with a different-dimension model — this is why local(small-dim)→server(4096) migration
-  needs a **fresh** Qdrant + fresh Dify datasets (see DEPLOYMENT.md §7).
+  needs a **fresh** Qdrant + fresh Dify Knowledge Bases (see DEPLOYMENT.md).
 - **Connection refused:** check `QDRANT_URL`/`QDRANT_API_KEY` in Dify and that Dify shares the
   network with Qdrant.

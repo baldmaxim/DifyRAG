@@ -1,7 +1,7 @@
 # Qdrant (vector store for Dify)
 
-Qdrant stores the vectors, but **Dify owns and manages the collections**. The Document Knowledge
-Portal never writes to Qdrant — it only performs read-only health/diagnostics.
+Qdrant stores the vectors, but **Dify owns and manages the collections** — nothing else
+writes to Qdrant; manual access is read-only diagnostics.
 
 ## Run
 

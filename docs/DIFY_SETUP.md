@@ -32,16 +32,15 @@ docker compose ps        # api, worker, web, db, redis, ... should be healthy
 
 Open the console (default `http://localhost/install`) and set the admin password.
 
-## 4. Model provider + Knowledge API key
+## 4. Model provider
 
 - Add LM Studio as an OpenAI-compatible provider —
   [LM_STUDIO_DIFY_PROVIDER_SETUP.md](LM_STUDIO_DIFY_PROVIDER_SETUP.md).
-- Create a **Knowledge API key** (Settings → API access). Put it in the portal's
-  `DIFY_KNOWLEDGE_API_KEY`. Optionally create an **App API key** for `mode=answer`
-  (`DIFY_APP_API_KEY`).
+- (Optional) create **Knowledge/App API keys** (Settings → API access) if external
+  integrations need programmatic access to Dify.
 
 ## 5. Verify
 
 - Create a Knowledge Base, upload a test file, wait for `completed`.
 - Confirm a collection appears in Qdrant ([QDRANT_DIFY_MODE.md](QDRANT_DIFY_MODE.md)).
-- The portal reaches Dify via `DIFY_BASE_URL` + `DIFY_API_PREFIX` (`/v1`) with the Knowledge key.
+- Run a retrieval test in the KB and confirm relevant chunks come back.

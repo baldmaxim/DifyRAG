@@ -1,36 +1,25 @@
-# Platform deployment (Document Knowledge Portal app)
+# Platform: Qdrant on the GPU host
 
-Deploys **our** application (api + web). The RAG stack (Dify + Qdrant + LM Studio) and the
-database (Managed PostgreSQL) live elsewhere.
+`docker-compose.prod.yml` runs **Qdrant** — the vector store for Dify. Dify itself runs
+separately from its official compose in `/opt/dify/docker` (see `../dify/` and
+`../../docs/DIFY_SETUP.md`); the public domain is served by the host Caddy and proxies
+to Dify's nginx (local port 8090).
 
-## Prerequisites
-
-- External **Managed PostgreSQL** reachable via `DATABASE_URL`.
-- **Cloud.ru S3** bucket + access keys (without DeleteObject).
-- Running **Dify** stack with a Knowledge API key, plus Qdrant and LM Studio.
-- `apps/api/Dockerfile`, `apps/web/Dockerfile`, `nginx.conf` (created in prompt 07).
+> The former portal (api/web/postgres) is decommissioned. Its Postgres data stays in the
+> `dkp_postgres_data` volume — never run `docker compose down -v` here.
 
 ## Run
 
 ```bash
-cp ../../apps/api/.env.example ./api.env   # fill DATABASE_URL, S3_*, DIFY_*, LM_STUDIO_*, QDRANT_*
-docker compose -f docker-compose.platform.example.yml up -d --build
+cd /opt/difyrag/infra/platform
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-- API: `http://<host>:3000/api/v1/health`
-- Web: `http://<host>:8080`
+`QDRANT_API_KEY` lives in `.deploy-secrets.env` (not in the repo).
 
-## Environment that changes local → server
+## Helper scripts (server-side, one-off)
 
-| Var | Local | Server |
-|---|---|---|
-| `DATABASE_URL` | dev Postgres container | Managed PostgreSQL |
-| `DIFY_BASE_URL` | `http://localhost` | Dify private address |
-| `QDRANT_URL` | `http://localhost:6333` | Qdrant private address |
-| `LM_STUDIO_BASE_URL` | `http://host.docker.internal:1234/v1` | GPU host private address |
-| `CORS_ORIGIN` | `http://localhost:5173` | public web origin |
-
-The application code does not change between environments — only `.env`.
-
-See [../../docs/END_TO_END_RAG_DEPLOYMENT.md](../../docs/END_TO_END_RAG_DEPLOYMENT.md) and
-[../../docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) (the latter is created in prompt 07).
+- `fix-dify-nginx.sh`, `fix-dify-network.sh` — Dify nginx on :8090, Qdrant wiring
+  (`QDRANT_URL=http://172.17.0.1:6333` via the docker bridge gateway).
+- `fix-qdrant-bind.sh` — bind Qdrant to `172.17.0.1` so Dify containers can reach it.
+- `setup-lm-bridge.sh` — socat bridge so containers reach LM Studio without exposing it.
