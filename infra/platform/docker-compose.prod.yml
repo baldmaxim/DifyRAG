@@ -6,7 +6,8 @@
 # The dkp_postgres_data volume is kept below so old portal data survives on disk;
 # never run `docker compose down -v` here.
 #
-# All ports bind to 127.0.0.1 — expose via host Caddy/nginx only.
+# Qdrant binds to 172.17.0.1 (docker bridge gateway) so Dify containers reach it
+# via QDRANT_URL=http://172.17.0.1:6333 — do not expose it on 0.0.0.0.
 services:
   qdrant:
     image: qdrant/qdrant:v1.12.4
@@ -15,8 +16,8 @@ services:
     env_file:
       - ./.deploy-secrets.env
     ports:
-      - '127.0.0.1:6333:6333'
-      - '127.0.0.1:6334:6334'
+      - '172.17.0.1:6333:6333'
+      - '172.17.0.1:6334:6334'
     environment:
       QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
       QDRANT__SERVICE__ENABLE_TLS: 'false'
